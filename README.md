@@ -39,7 +39,7 @@ flowchart LR
     B --> D[🧪 bdder]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
-    E --> F[🔍 Code Review]
+    E --> F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
     F --> H[🩹 fixer]
@@ -48,7 +48,7 @@ flowchart LR
     style C fill:#D97706,color:#fff
     style D fill:#059669,color:#fff
     style E fill:#EA580C,color:#fff
-    style F fill:#7C3AED,color:#fff
+    style F fill:#1e293b,color:#fff
     style G fill:#DC2626,color:#fff
     style H fill:#DB2777,color:#fff
     style B fill:#1e293b,color:#fff
