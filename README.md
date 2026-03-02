@@ -1,2 +1,3 @@
 # skills
-AI Skills  tgm
+
+🥷
