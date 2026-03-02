@@ -18,7 +18,7 @@ Skills are templates. Customize them per project by editing the markdown files t
 | 🗺️ `/planner` | Feature implementation planning |
 | ✨ `/improver` | Review code and fix all found issues directly |
 | 🧪 `/bdder` | BDD test improvement guidance |
-| 🌍 `/creator` | PR description & title generator |
+| 🌍 `/creator` | PR description & title generator (🟢 Ready) |
 | ✂️ `/breaker` | PR splitting into smaller PRs |
 | 🩹 `/fixer` | PR revision feedback resolver |
 | 🔍 `/reviewer` | Code review (Clean Code, Security, Performance) |

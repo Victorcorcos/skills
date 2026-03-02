@@ -23,7 +23,7 @@ A collection of reusable prompts and skills for software development workflows, 
 | 🗺️ Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
 | ✨ Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
 | 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
-| 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟡 Pending |
+| 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
 | ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
 | 🩹 Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
 | 🔍 Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
