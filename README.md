@@ -20,13 +20,13 @@ A collection of reusable prompts and skills for software development workflows, 
 
 | Skill | Command | Purpose | Status |
 |-------|---------|---------|--------|
+| Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
+| Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
+| BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟡 Pending |
 | Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
-| Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
-| BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
-| Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
 | Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
-| Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
+| Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
 
 ---
 
@@ -35,23 +35,23 @@ A collection of reusable prompts and skills for software development workflows, 
 ```mermaid
 flowchart LR
     A[planner] --> B[Coding]
-    B --> C[bdder]
-    B --> D[reviewer]
+    B --> C[improver]
+    B --> D[bdder]
     C --> E[creator]
     D --> E[creator]
-    E --> F((PR Submitted))
-    F --> G[fixer]
-    G -->|if too large| H[breaker]
-    H --> E
+    E --> F[Code Review\nreviewer]
+    E -->|if large| G[breaker]
+    G --> F
+    F --> H[fixer]
 
     style A fill:#7C3AED,color:#fff
     style C fill:#7C3AED,color:#fff
     style D fill:#7C3AED,color:#fff
     style E fill:#7C3AED,color:#fff
+    style F fill:#7C3AED,color:#fff
     style G fill:#7C3AED,color:#fff
     style H fill:#7C3AED,color:#fff
     style B fill:#1e293b,color:#fff
-    style F fill:#16a34a,color:#fff
 ```
 
 ---
