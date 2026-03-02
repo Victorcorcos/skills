@@ -44,13 +44,13 @@ flowchart LR
     G --> F
     F --> H[🩹 fixer]
 
-    style A fill:#7C3AED,color:#fff
-    style C fill:#7C3AED,color:#fff
-    style D fill:#7C3AED,color:#fff
-    style E fill:#7C3AED,color:#fff
+    style A fill:#2563EB,color:#fff
+    style C fill:#D97706,color:#fff
+    style D fill:#059669,color:#fff
+    style E fill:#EA580C,color:#fff
     style F fill:#7C3AED,color:#fff
-    style G fill:#7C3AED,color:#fff
-    style H fill:#7C3AED,color:#fff
+    style G fill:#DC2626,color:#fff
+    style H fill:#DB2777,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 
