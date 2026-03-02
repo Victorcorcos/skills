@@ -21,3 +21,4 @@ Skills are templates. Customize them per project by editing the markdown files t
 | `/bdder` | BDD test improvement guidance |
 | `/planner` | Feature implementation planning |
 | `/fixer` | PR revision feedback resolver |
+| `/improver` | Review code and fix all found issues directly |
