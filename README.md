@@ -35,14 +35,14 @@ A collection of reusable prompts and skills for software development workflows, 
 ```mermaid
 flowchart LR
     A[planner] --> B[Coding]
-    B --> C[improver]
-    B --> D[bdder]
-    C --> E[creator]
-    D --> E[creator]
-    E --> F[Code Review\nreviewer]
-    E -->|if large| G[breaker]
+    B --> C[/improver]
+    B --> D[/bdder]
+    C --> E[/creator]
+    D --> E[/creator]
+    E --> F[Code Review]
+    E -->|if large| G[/breaker]
     G --> F
-    F --> H[fixer]
+    F --> H[/fixer]
 
     style A fill:#7C3AED,color:#fff
     style C fill:#7C3AED,color:#fff
