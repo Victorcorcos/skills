@@ -15,10 +15,10 @@ Skills are templates. Customize them per project by editing the markdown files t
 
 | Command | Description |
 |---------|-------------|
-| `/creator` | PR description & title generator |
-| `/breaker` | PR splitting into smaller PRs |
-| `/reviewer` | Code review (Clean Code, Security, Performance) |
-| `/bdder` | BDD test improvement guidance |
-| `/planner` | Feature implementation planning |
-| `/fixer` | PR revision feedback resolver |
-| `/improver` | Review code and fix all found issues directly |
+| 🗺️ `/planner` | Feature implementation planning |
+| ✨ `/improver` | Review code and fix all found issues directly |
+| 🧪 `/bdder` | BDD test improvement guidance |
+| 🌍 `/creator` | PR description & title generator |
+| ✂️ `/breaker` | PR splitting into smaller PRs |
+| 🩹 `/fixer` | PR revision feedback resolver |
+| 🔍 `/reviewer` | Code review (Clean Code, Security, Performance) |

@@ -20,13 +20,13 @@ A collection of reusable prompts and skills for software development workflows, 
 
 | Skill | Command | Purpose | Status |
 |-------|---------|---------|--------|
-| Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
-| Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
-| BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
-| Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟡 Pending |
-| Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
-| Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
-| Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
+| 🗺️ Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
+| ✨ Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
+| 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
+| 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟡 Pending |
+| ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
+| 🩹 Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
+| 🔍 Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
 
 ---
 
@@ -95,13 +95,13 @@ claude           # start Claude Code
 <details>
 <summary><strong>Skill Descriptions</strong></summary>
 
-- **Creator** -- Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
-- **Breaker** -- Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
-- **Reviewer** -- Performs a code review focused on Clean Code principles, security vulnerabilities, and performance concerns.
-- **BDDer** -- Examines existing tests and suggests improvements using Behavior Driven Development patterns (Given / When / Then).
-- **Planner** -- Takes a feature request and breaks it down into concrete implementation steps with checkmarks.
-- **Fixer** -- Reads PR review comments and produces best-practice fixes for each piece of feedback.
-- **Improver** -- Like Reviewer, but goes further: reviews code for Clean Code, Security, and Performance issues and applies the fixes directly.
+- 🗺️ **Planner** -- Takes a feature request and breaks it down into concrete implementation steps with checkmarks.
+- ✨ **Improver** -- Like Reviewer, but goes further: reviews code for Clean Code, Security, and Performance issues and applies the fixes directly.
+- 🧪 **BDDer** -- Examines existing tests and suggests improvements using Behavior Driven Development patterns (Given / When / Then).
+- 🌍 **Creator** -- Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
+- ✂️ **Breaker** -- Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
+- 🩹 **Fixer** -- Reads PR review comments and produces best-practice fixes for each piece of feedback.
+- 🔍 **Reviewer** -- Performs a code review focused on Clean Code principles, security vulnerabilities, and performance concerns.
 
 </details>
 
@@ -110,26 +110,26 @@ claude           # start Claude Code
 ## Example Usage
 
 ```bash
-# Plan a new feature
+# 🗺️ Plan a new feature
 claude /planner
 
-# Write code, then improve tests
+# ✨ Review and auto-fix issues in one step
+claude /improver
+
+# 🧪 Write code, then improve tests
 claude /bdder
 
-# Review your own changes before opening a PR
-claude /reviewer
-
-# Generate the PR description
+# 🌍 Generate the PR description
 claude /creator
 
-# After receiving review feedback
-claude /fixer
-
-# If the PR is too large
+# ✂️ If the PR is too large
 claude /breaker
 
-# Review and auto-fix issues in one step
-claude /improver
+# 🩹 After receiving review feedback
+claude /fixer
+
+# 🔍 Review your own changes
+claude /reviewer
 ```
 
 ---
@@ -137,10 +137,6 @@ claude /improver
 > *"Reusable prompts turn tribal knowledge into shared infrastructure. Write the prompt once, improve it forever."*
 
 ---
-
-## License
-
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Contributing
 
