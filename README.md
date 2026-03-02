@@ -26,6 +26,7 @@ A collection of reusable prompts and skills for software development workflows, 
 | BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
 | Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
 | Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
+| Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
 
 ---
 
@@ -35,7 +36,8 @@ A collection of reusable prompts and skills for software development workflows, 
 flowchart LR
     A[planner] --> B[Coding]
     B --> C[bdder]
-    C --> D[reviewer]
+    B --> D[reviewer]
+    C --> E[creator]
     D --> E[creator]
     E --> F((PR Submitted))
     F --> G[fixer]
@@ -99,6 +101,7 @@ claude           # start Claude Code
 - **BDDer** -- Examines existing tests and suggests improvements using Behavior Driven Development patterns (Given / When / Then).
 - **Planner** -- Takes a feature request and breaks it down into concrete implementation steps with checkmarks.
 - **Fixer** -- Reads PR review comments and produces best-practice fixes for each piece of feedback.
+- **Improver** -- Like Reviewer, but goes further: reviews code for Clean Code, Security, and Performance issues and applies the fixes directly.
 
 </details>
 
@@ -124,6 +127,9 @@ claude /fixer
 
 # If the PR is too large
 claude /breaker
+
+# Review and auto-fix issues in one step
+claude /improver
 ```
 
 ---
