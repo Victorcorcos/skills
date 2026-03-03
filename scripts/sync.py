@@ -155,6 +155,13 @@ def main() -> None:
 
     sync(write=write, src_dir=src_dir, claude_out_dir=claude_out_dir, codex_out_dir=codex_out_dir)
 
+    if args.install and write:
+        # Make it obvious where things went; Codex installs are typically global (not in the project repo).
+        if claude_out_dir:
+            print(f"Installed Claude commands to: {claude_out_dir}")
+        if codex_out_dir:
+            print(f"Installed Codex skills to: {codex_out_dir}")
+
 
 if __name__ == "__main__":
     main()
