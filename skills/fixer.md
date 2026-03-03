@@ -1,10 +1,10 @@
-# Breaker
+# Fixer
 
 > **Status**: 🚧 Under Construction
 
 ## Purpose
 
-<!-- TODO: Analyze large PRs and suggest how to split them -->
+<!-- TODO: Address PR review feedback with best-practice solutions -->
 
 ## When to Use
 
@@ -21,3 +21,4 @@
 ## Examples
 
 <!-- TODO: Add good/bad examples -->
+

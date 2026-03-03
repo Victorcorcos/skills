@@ -1,10 +1,10 @@
-# Planner
+# Breaker
 
 > **Status**: 🚧 Under Construction
 
 ## Purpose
 
-<!-- TODO: Break down features into implementation checkmarks -->
+<!-- TODO: Analyze large PRs and suggest how to split them -->
 
 ## When to Use
 
@@ -21,3 +21,4 @@
 ## Examples
 
 <!-- TODO: Add good/bad examples -->
+

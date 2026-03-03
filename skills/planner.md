@@ -1,10 +1,10 @@
-# Fixer
+# Planner
 
 > **Status**: 🚧 Under Construction
 
 ## Purpose
 
-<!-- TODO: Address PR review feedback with best-practice solutions -->
+<!-- TODO: Break down features into implementation checkmarks -->
 
 ## When to Use
 
@@ -21,3 +21,4 @@
 ## Examples
 
 <!-- TODO: Add good/bad examples -->
+

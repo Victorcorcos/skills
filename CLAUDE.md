@@ -1,15 +1,27 @@
 # Skills Repository
 
-This repository contains reusable development workflow skills for Claude Code.
+This repository contains reusable development workflow skills for Claude Code and Codex CLI.
 
 ## Structure
 
-- `.claude/commands/` -- Each `.md` file is a skill invokable with `/skillname`
-- `templates/` -- Shared templates referenced by skills (e.g. PR template)
+- `skills/` -- Canonical source prompts (edit these). Also usable directly as Claude Code commands.
+- `.claude/commands/` -- Generated Claude Code commands (same content as `skills/`)
+- `codex/<skill-name>/SKILL.md` -- Generated Codex CLI skills (YAML frontmatter + skill body)
+- `templates/` -- Shared templates referenced by skills (for example PR template)
+- `install/` -- Installation guides
 
 ## Usage
 
-Skills are templates. Customize them per project by editing the markdown files to match your team's conventions, coding standards, and tooling.
+Skills are templates. Customize them per project by editing `skills/*.md` to match your team's conventions, coding standards, and tooling, then sync:
+
+```bash
+python3 scripts/sync.py --write
+```
+
+Generated outputs:
+
+- Do not edit `.claude/commands/*.md` or `codex/*/SKILL.md` manually.
+- Edit `skills/*.md`, then re-run the sync script.
 
 ## Available Skills
 

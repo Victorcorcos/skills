@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+
+SKILL_DESCRIPTIONS: dict[str, str] = {
+    "planner": "Break down a feature request into concrete implementation steps and checklists. Use when asked to plan work, scope tasks, or produce an implementation plan.",
+    "improver": "Review code for Clean Code, security, and performance issues, then apply fixes directly. Use when asked to improve code quality and implement fixes.",
+    "bdder": "Improve tests using Behavior Driven Development (BDD) structure and naming conventions. Use when asked to rewrite or improve tests in a BDD style.",
+    "creator": "Analyze the current git diff and draft a pull request title and description, including test guidance, and generate pull_request.md. Use when asked to draft or create a pull request description/title.",
+    "breaker": "Analyze a large set of changes and propose how to split it into smaller, reviewable pull requests. Use when asked to split a PR or reduce diff size.",
+    "fixer": "Address PR review feedback by proposing and implementing best-practice fixes. Use when asked to resolve review comments or follow-up changes.",
+    "reviewer": "Perform a code review focused on Clean Code, security, and performance. Use when asked for a code review or risk assessment.",
+}
+
+
+def yaml_single_quote(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def write_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not content.endswith("\n"):
+        content += "\n"
+    path.write_text(content, encoding="utf-8")
+
+
+def build_codex_skill(name: str, body: str) -> str:
+    description = SKILL_DESCRIPTIONS.get(name)
+    if not description:
+        raise SystemExit(f"Missing SKILL_DESCRIPTIONS entry for: {name}")
+
+    frontmatter = "\n".join(
+        [
+            "---",
+            f"name: {name}",
+            f"description: {yaml_single_quote(description)}",
+            "---",
+            "",
+        ]
+    )
+    return frontmatter + body.lstrip("\n")
+
+
+def sync(*, write: bool, src_dir: Path, claude_out_dir: Path, codex_out_dir: Path) -> None:
+    root = repo_root()
+
+    if not src_dir.exists():
+        raise SystemExit(f"Missing source dir: {src_dir}")
+
+    sources = sorted(src_dir.glob("*.md"))
+    if not sources:
+        raise SystemExit(f"No skills found in: {src_dir}")
+
+    for src in sources:
+        name = src.stem
+        body = src.read_text(encoding="utf-8")
+
+        claude_out = claude_out_dir / f"{name}.md"
+        codex_out = codex_out_dir / name / "SKILL.md"
+
+        if write:
+            write_text(claude_out, body)
+            write_text(codex_out, build_codex_skill(name, body))
+        else:
+            print(str(claude_out))
+            print(str(codex_out))
+
+    pr_template_src = root / "templates" / "pull_request_template.md"
+    if pr_template_src.exists():
+        pr_template_out = codex_out_dir / "creator" / "assets" / "pull_request_template.md"
+        if write:
+            write_text(pr_template_out, pr_template_src.read_text(encoding="utf-8"))
+        else:
+            print(str(pr_template_out))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Sync canonical skill prompts to Claude and Codex formats.")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write outputs. Without this, prints the paths that would be written.",
+    )
+    parser.add_argument(
+        "--src",
+        default=None,
+        help="Source skills dir (default: <repo>/skills).",
+    )
+    parser.add_argument(
+        "--claude-out",
+        default=None,
+        help="Claude commands output dir (default: <repo>/.claude/commands).",
+    )
+    parser.add_argument(
+        "--codex-out",
+        default=None,
+        help="Codex skills output dir (default: <repo>/codex).",
+    )
+    args = parser.parse_args()
+    root = repo_root()
+    src_dir = Path(args.src) if args.src else (root / "skills")
+    claude_out_dir = Path(args.claude_out) if args.claude_out else (root / ".claude" / "commands")
+    codex_out_dir = Path(args.codex_out) if args.codex_out else (root / "codex")
+    sync(write=args.write, src_dir=src_dir, claude_out_dir=claude_out_dir, codex_out_dir=codex_out_dir)
+
+
+if __name__ == "__main__":
+    main()

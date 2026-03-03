@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+
+# Legacy generated outputs (no longer committed)
+.claude/
+codex/
