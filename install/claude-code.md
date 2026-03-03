@@ -6,13 +6,12 @@ All commands below assume `SKILLS_PATH` points to this repository:
 export SKILLS_PATH="/abs/path/to/skills"
 ```
 
-## Option A (Recommended): Symlink Commands Into A Project
+## Option A (Recommended): Sync Commands Into A Project
 
 From a target repository root:
 
 ```bash
-mkdir -p .claude
-ln -s "$SKILLS_PATH/skills" .claude/commands
+python3 "$SKILLS_PATH/scripts/sync.py" --install --no-codex
 ```
 
 ## Shared Templates
@@ -27,7 +26,7 @@ Recommended setup:
 cat "$SKILLS_PATH/templates/pull_request_template.md"
 ```
 
-## Option B: Copy A Single Command
+## Option B: Copy A Single Command (No Sync)
 
 ```bash
 mkdir -p .claude/commands

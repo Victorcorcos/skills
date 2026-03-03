@@ -10,30 +10,13 @@ export SKILLS_PATH="/abs/path/to/skills"
 
 ## Build (Required)
 
-Codex skills need a small YAML frontmatter header. Generate the Codex-compatible skills into `codex/`:
+Codex skills need a small YAML frontmatter header. Install them by generating directly into your Codex skills directory:
 
 ```bash
-python3 "$SKILLS_PATH/scripts/sync.py" --write
-```
-
-## Option A (Recommended): Symlink All Skills
-
-```bash
-mkdir -p ~/.codex/skills
-for d in "$SKILLS_PATH"/codex/*; do
-  name="$(basename "$d")"
-  ln -s "$d" "$HOME/.codex/skills/$name"
-done
+python3 "$SKILLS_PATH/scripts/sync.py" --install --no-claude
 ```
 
 Restart Codex CLI to pick up new skills.
-
-## Option B: Install A Single Skill
-
-```bash
-mkdir -p ~/.codex/skills
-ln -s "$SKILLS_PATH/codex/creator" ~/.codex/skills/creator
-```
 
 # Usage
 
