@@ -56,13 +56,47 @@ From the diff, extract:
 
 ---
 
-## Step 3 — Draft The PR Title
+## Step 3 — Extract Ticket Number
+
+Extract the ticket number from the current branch name using this regex:
+
+```
+(DIGIT|digit|DPMS|dpms)-?(\d+)
+```
+
+```bash
+git rev-parse --abbrev-ref HEAD
+```
+
+Normalise the match to uppercase with a hyphen separator (e.g. `DIGIT-3131`, `DPMS-4314`).
+
+Examples of branch names that match:
+- `digit-3131` → `DIGIT-3131`
+- `DIGIT3131` → `DIGIT-3131`
+- `feature/dpms-4314-add-login` → `DPMS-4314`
+- `DPMS1492_some_feature` → `DPMS-1492`
+
+**If the branch name does not match**, ask the developer:
+
+> "I couldn't find a ticket number in the branch name. Do you have one? (e.g. DIGIT-3131)"
+
+**If the developer does not know or skips**, omit the ticket entirely:
+- Do **not** add it to the PR title.
+- Remove the `# Plane Ticket 🎫` section from `pull_request.md` completely — do not write any placeholder text.
+
+Store the resolved ticket (or absence of one) as `TICKET` and use it in Steps 4 and 6.
+
+---
+
+## Step 4 — Draft The PR Title
 
 Rules:
 
 - Max 72 characters
 - Imperative mood (for example "Add payment retry logic")
 - Specific enough that reviewers understand scope from the title alone
+- If `TICKET` was resolved, prefix the title: `TICKET Description` (e.g. `DIGIT-3131 Add payment retry logic`)
+- If `TICKET` is absent, omit the prefix entirely
 
 ---
 
@@ -98,17 +132,35 @@ Assume a tester (not the developer) will validate this PR. Write step-by-step ch
 
 ## Step 6 — Generate `pull_request.md`
 
-Create a file at the repository root called `pull_request.md` containing:
+Create a file at the repository root called `pull_request.md` containing **only the PR body** — no title, no wrapper headings.
+
+The file must start directly with the first section from the PR template (e.g. `# Description ✍️`) and contain the full description including test guidance:
 
 ```markdown
-# PR Title
+# Description ✍️
 
-<the drafted title>
+<the drafted description>
 
-# PR Description
+# Overview 🔍
 
-<the full drafted description including test guidance>
+<overview, screenshots, etc.>
+
+# Checks ☑️
+
+- [ ] ...
+
+# Test Guidance 🧪
+
+<step-by-step tester instructions>
+
+# Plane Ticket 🎫                          ← include ONLY if TICKET was resolved
+
+[DIGIT-3131](https://plane.oxean.com.br/oxeanbits/browse/DIGIT-3131)
 ```
+
+> **Important**:
+> - Do NOT add a `# PR Title` section or a `# PR Description` wrapper. The title is passed via `--title` to `gh pr create`; this file is used as `--body-file` and is the description verbatim.
+> - If no ticket was resolved, remove the `# Plane Ticket 🎫` section entirely. Do **not** write any placeholder text such as `DIGIT-XXXX` or "No ticket number provided".
 
 Do not commit this file.
 
@@ -116,10 +168,45 @@ Do not commit this file.
 
 ## Step 7 — Create The Pull Request (Optional)
 
-Open the PR on GitHub using `gh`:
+### Pre-flight: resolve owner and branch
+
+`gh pr create` will abort if it detects uncommitted files (like the freshly generated `pull_request.md`) and no `--head` flag is given. Always supply `--head` in `owner:branch` format and `--base` explicitly to avoid both issues.
+
+Resolve the required values first:
 
 ```bash
-gh pr create --title "<title>" --body-file pull_request.md
+# Remote owner (GitHub username or org that owns the repo)
+GH_OWNER=$(gh repo view --json owner --jq '.owner.login')
+
+# Current branch name
+GH_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Base branch (master or main — match the repo default)
+GH_BASE=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
+
+echo "$GH_OWNER:$GH_BRANCH → $GH_BASE"
+```
+
+### Create the PR
+
+```bash
+gh pr create \
+  --title "<title>" \
+  --body-file pull_request.md \
+  --head "$GH_OWNER:$GH_BRANCH" \
+  --base "$GH_BASE"
+```
+
+> **Why `--head owner:branch`?**
+> Without it, `gh` aborts when it finds any uncommitted file in the working tree (including `pull_request.md` itself).
+> The bare `--head branch` form also fails with *"Head sha can't be blank"* because GitHub's API requires the fully-qualified `owner:branch` reference.
+
+### Push the branch first if needed
+
+If the branch has not been pushed to the remote yet, push it before creating the PR:
+
+```bash
+git push origin "$GH_BRANCH"
 ```
 
 ### Label Selection
