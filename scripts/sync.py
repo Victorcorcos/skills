@@ -27,6 +27,8 @@ def repo_root() -> Path:
 
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        path.unlink()
     if not content.endswith("\n"):
         content += "\n"
     path.write_text(content, encoding="utf-8")
