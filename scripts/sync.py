@@ -122,14 +122,14 @@ def main() -> None:
         help="Codex skills output dir (default: <repo>/codex).",
     )
     parser.add_argument(
-        "--no-claude",
+        "--claude",
         action="store_true",
-        help="Skip writing Claude outputs.",
+        help="Write Claude outputs. If neither --claude nor --codex is given, both are written.",
     )
     parser.add_argument(
-        "--no-codex",
+        "--codex",
         action="store_true",
-        help="Skip writing Codex outputs.",
+        help="Write Codex outputs. If neither --claude nor --codex is given, both are written.",
     )
     args = parser.parse_args()
     root = repo_root()
@@ -150,8 +150,9 @@ def main() -> None:
         claude_default = root / ".claude" / "commands"
         codex_default = root / "codex"
 
-    claude_out_dir = None if args.no_claude else (Path(args.claude_out).expanduser() if args.claude_out else claude_default)
-    codex_out_dir = None if args.no_codex else (Path(args.codex_out).expanduser() if args.codex_out else codex_default)
+    install_both = not args.claude and not args.codex
+    claude_out_dir = (Path(args.claude_out).expanduser() if args.claude_out else claude_default) if (args.claude or install_both) else None
+    codex_out_dir = (Path(args.codex_out).expanduser() if args.codex_out else codex_default) if (args.codex or install_both) else None
 
     sync(write=write, src_dir=src_dir, claude_out_dir=claude_out_dir, codex_out_dir=codex_out_dir)
 

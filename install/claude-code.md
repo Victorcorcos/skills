@@ -11,7 +11,7 @@ export SKILLS_PATH="/abs/path/to/skills"
 From a target repository root:
 
 ```bash
-python3 "$SKILLS_PATH/scripts/sync.py" --install --no-codex
+python3 "$SKILLS_PATH/scripts/sync.py" --install --claude
 ```
 
 ## Shared Templates

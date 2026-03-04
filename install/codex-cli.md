@@ -13,7 +13,7 @@ export SKILLS_PATH="/abs/path/to/skills"
 Codex skills need a small YAML frontmatter header. Install them by generating directly into your Codex skills directory:
 
 ```bash
-python3 "$SKILLS_PATH/scripts/sync.py" --install --no-claude
+python3 "$SKILLS_PATH/scripts/sync.py" --install --codex
 ```
 
 Restart Codex CLI to pick up new skills.
