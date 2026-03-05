@@ -35,7 +35,7 @@ This repository supports:
 |-------|---------|---------|--------|
 | 🗺️ Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
 | ✨ Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
-| 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟡 Pending |
+| 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 Ready |
 | 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
 | ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
 | 🩹 Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
@@ -84,7 +84,7 @@ See `install/`:
 
 - 🗺️ **Planner** -- Takes a feature request and breaks it down into concrete implementation steps with checkmarks.
 - ✨ **Improver** -- Like Reviewer, but goes further: reviews code for Clean Code, Security, and Performance issues and applies the fixes directly.
-- 🧪 **BDDer** -- Examines existing tests and suggests improvements using Behavior Driven Development patterns (Given / When / Then).
+- 🧪 **BDDer** -- Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** -- Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - ✂️ **Breaker** -- Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
 - 🩹 **Fixer** -- Reads PR review comments and produces best-practice fixes for each piece of feedback.
