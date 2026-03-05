@@ -33,7 +33,7 @@ This repository supports:
 
 | Skill | Command | Purpose | Status |
 |-------|---------|---------|--------|
-| 🗺️ Planner | `/planner` | Break down features into implementation steps | 🟡 Pending |
+| 🗺️ Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 Ready |
 | ✨ Improver | `/improver` | Review code and fix all found issues directly | 🟡 Pending |
 | 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 Ready |
 | 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
@@ -82,7 +82,7 @@ See `install/`:
 <details>
 <summary><strong>Skill Descriptions</strong></summary>
 
-- 🗺️ **Planner** -- Takes a feature request and breaks it down into concrete implementation steps with checkmarks.
+- 🗺️ **Planner** -- Investigates the codebase, plans tasks in structured checkpoint-driven sections saved as `PLAN.md`, then executes section by section with human approval gates.
 - ✨ **Improver** -- Like Reviewer, but goes further: reviews code for Clean Code, Security, and Performance issues and applies the fixes directly.
 - 🧪 **BDDer** -- Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** -- Reads the current diff / branch and produces a well-structured PR title and description following your team's template.

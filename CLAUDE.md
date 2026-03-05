@@ -27,7 +27,7 @@ Generated outputs:
 
 | Command | Description |
 |---------|-------------|
-| 🗺️ `/planner` | Feature implementation planning |
+| 🗺️ `/planner` | Plan tasks in sections, execute with approval gates |
 | ✨ `/improver` | Review code and fix all found issues directly |
 | 🧪 `/bdder` | BDD test improvement guidance |
 | 🌍 `/creator` | PR description & title generator (🟢 Ready) |
