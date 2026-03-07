@@ -1,6 +1,6 @@
 interface:
   display_name: "Improver"
-  short_description: "TODO"
-  default_prompt: "TODO"
+  short_description: "Review branch code for Clean Code, security, and performance issues, then fix interactively."
+  default_prompt: "Analyze the current branch diff for code smells, security vulnerabilities, and performance issues, then walk me through each finding with proposed fixes."
 policy:
   allow_implicit_invocation: false
