@@ -45,10 +45,10 @@ For each changed test file, analyze:
 
 1. **Structure**: Are tests grouped by scenario or by function? Are nested contexts used?
 2. **Naming**: Do `describe` blocks describe *scenarios*? Do `it` blocks describe *outcomes*?
-3. **Setup**: Is setup scattered inside `it` blocks, or cleanly isolated in `before` blocks?
-4. **Realism**: Are mocks/stubs used where real interactions are possible?
-5. **Clarity**: Can a non-author read the test and understand what it covers?
-6. **Coverage**: Are happy paths covered? Edge cases? Error states?
+3. **Setup**: Is setup scattered inside `it` blocks, or cleanly isolated in `before` (or `beforeAll`, `before(:all)`, etc) blocks? Read "Step 4 — Apply BDD Structure".
+4. **Realism**: Are mocks/stubs used where real interactions are possible? Read "Step 5 — Eliminate Mocks and Stubs".
+5. **Clarity**: Can a non-author read the test and understand what it covers while following the blocks? Read "Step 6 — Improve Test Quality"
+6. **Coverage**: Are happy paths covered? Edge cases? Failure paths? Error states?
 7. **Assertions**: Are assertions meaningful and minimal (one concern per `it`)?
 
 ---
@@ -70,9 +70,9 @@ Use subordinating conjunctions to frame the context:
 
 Nest `describe` blocks to express progressively narrower scenarios. Each level narrows the context without repeating parent context.
 
-### `before()`/`before(:all)` blocks — Prepare the scenario
+### `before()`/`before(:all)`/`beforeAll`/`beforeETC` blocks — Prepare the scenario
 
-Use `before` blocks exclusively for setup. Never put assertions inside them.
+Use `before` related blocks exclusively for setup. Never put assertions inside them.
 
 - Create records, configure state, render components
 - Declare important variables (e.g., `@user`, `@result`, `@response`)
@@ -141,7 +141,7 @@ Apply these improvements across all changed test files:
 ### Clarity
 - Remove redundant comments that just restate the code
 - Remove dead or skipped tests (`xit`, `xdescribe`, `pending`) unless they are intentionally skipped with a tracked reason
-- Ensure test names are unique and self-explanatory without needing to read the body
+- Ensure test names are unique, self-explanatory and intention-revealing without needing to read the body
 
 ### Consistency
 - Use the same factory/fixture style already established in the project
@@ -205,8 +205,29 @@ After all improvements are applied, produce a short summary:
 ```
 ## BDD Improvements Applied
 
-### Files Changed
+### File Changed (1/N)
 - path/to/spec_file.rb
+
+### Changes Made
+- Restructured `describe` blocks to use scenario-based naming
+- Moved inline setup into `before` blocks
+- Replaced 3 mocks with real ActiveRecord interactions
+- Added 2 missing edge case tests for <scenario>
+- Fixed 1 assertion that tested implementation detail
+
+### File Changed (2/N)
+- path/to/another_spec.js
+
+### Changes Made
+- Restructured `describe` blocks to use scenario-based naming
+- Moved inline setup into `before` blocks
+- Replaced 3 mocks with real ActiveRecord interactions
+- Added 2 missing edge case tests for <scenario>
+- Fixed 1 assertion that tested implementation detail
+
+[...]
+
+### File Changed (N/N)
 - path/to/another_spec.js
 
 ### Changes Made
