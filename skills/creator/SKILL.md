@@ -45,15 +45,19 @@ Only proceed if the user explicitly confirms they want to continue.
 
 ## Step 2 — Analyze Changes
 
-Run the diff against the resolved base:
+Run the diff and read the commit log against the resolved base:
 
 ```bash
 git diff "$BASE_REF"
 ```
 
-From the diff, extract:
+```bash
+git log "$BASE_REF"..HEAD --reverse --format="### %s%n%n%b"
+```
 
-1. **Summary**: What changed and why (infer intent from commits and code).
+From the diff and commit messages, extract:
+
+1. **Summary**: What changed and why (use commit messages to understand intent, cross-reference with the diff for accuracy).
 2. **Modules affected**: High-level areas of the codebase touched.
 3. **Type of change**: bug fix, new feature, breaking change, refactor, docs, tests.
 4. **Breaking changes**: API signature changes, removed endpoints, migrations, etc.
@@ -87,9 +91,9 @@ Examples of branch names that match:
 
 **If the developer does not know or skips**, omit the ticket entirely:
 - Do **not** add it to the PR title.
-- Remove the `# Plane Ticket 🎫` section from `pull_request.md` completely — do not write any placeholder text.
+- Remove the `# Ticket 🎫` section from `pull_request.md` completely — do not write any placeholder text.
 
-Store the resolved ticket (or absence of one) as `TICKET` and use it in Steps 4 and 6.
+Store the resolved ticket (or absence of one) as `TICKET` and use it in Steps 4 and 7.
 
 ---
 
@@ -105,7 +109,7 @@ Rules:
 
 ---
 
-## Step 4 — Draft The PR Description
+## Step 5 — Draft The PR Description
 
 Use the PR template from the current project first:
 
@@ -126,16 +130,19 @@ Fill in every section of the template. Additionally, ensure the description incl
 
 ---
 
-## Step 5 — Write The Test Guidance Section
+## Step 6 — Write The Test Guidance Section
 
-Assume a tester (not the developer) will validate this PR. Write step-by-step checks:
+Assume a tester (not the developer) will validate this PR. Write numbered step-by-step checks that include:
 
-- Favor real user scenarios.
-- Cover the happy path first, then edge cases.
+- **Preconditions**: Setup, test data, or permissions required before testing.
+- **Concrete actions**: Reference specific pages, endpoints, buttons, or CLI commands the tester should interact with.
+- **Expected results**: State what the tester should observe after each action (e.g. "The toast shows 'Payment saved'", "The API returns 200 with `{ status: 'ok' }`").
+- **Happy path first**, then edge cases (e.g. invalid input, empty state, unauthorized access).
+- **Regression checks**: If the change touches shared code, note areas that should still work as before.
 
 ---
 
-## Step 6 — Generate `pull_request.md`
+## Step 7 — Generate `pull_request.md`
 
 Create a file at the repository root called `pull_request.md` containing **only the PR body** — no title, no wrapper headings.
 
@@ -150,28 +157,44 @@ The file must start directly with the first section from the PR template (e.g. `
 
 <overview, screenshots, etc.>
 
-# Checks ☑️
-
-- [ ] ...
-
-# Test Guidance 🧪
+# Test Guidance 🦮
 
 <step-by-step tester instructions>
 
-# Plane Ticket 🎫                          ← include ONLY if TICKET was resolved
+# Ticket 🎫                               ← include ONLY if TICKET was resolved
 
 [DIGIT-3131](https://plane.oxean.com.br/oxeanbits/browse/DIGIT-3131)
 ```
 
 > **Important**:
 > - Do NOT add a `# PR Title` section or a `# PR Description` wrapper. The title is passed via `--title` to `gh pr create`; this file is used as `--body-file` and is the description verbatim.
-> - If no ticket was resolved, remove the `# Plane Ticket 🎫` section entirely. Do **not** write any placeholder text such as `DIGIT-XXXX` or "No ticket number provided".
+> - If no ticket was resolved, remove the `# Ticket 🎫` section entirely. Do **not** write any placeholder text such as `DIGIT-XXXX` or "No ticket number provided".
 
 Do not commit this file.
 
 ---
 
-## Step 7 — Create The Pull Request (Optional)
+## Step 8 — Review & Confirm
+
+Before creating the PR, present the following summary to the user and **wait for explicit approval**:
+
+1. **PR Title**: The drafted title from Step 4.
+2. **Labels**: The selected labels from the label table.
+3. **Draft or Ready**: Whether to open as draft (`--draft`) or ready for review.
+4. **Description preview**: A brief excerpt or confirmation that the full body is in `pull_request.md`.
+
+> "Here's what I'll open:
+> - **Title**: `<title>`
+> - **Labels**: `label1`, `label2`
+> - **Mode**: Draft / Ready for review
+>
+> Should I proceed?"
+
+Only continue to the PR creation steps below after the user confirms.
+
+---
+
+## Step 9 — Create The Pull Request
 
 ### Pre-flight: resolve owner and branch
 
@@ -194,12 +217,15 @@ echo "$GH_OWNER:$GH_BRANCH → $GH_BASE"
 
 ### Create the PR
 
+If the user chose **draft mode** in Step 8, add `--draft`:
+
 ```bash
 gh pr create \
   --title "<title>" \
   --body-file pull_request.md \
   --head "$GH_OWNER:$GH_BRANCH" \
-  --base "$GH_BASE"
+  --base "$GH_BASE" \
+  --draft  # omit this flag if the user chose "Ready for review"
 ```
 
 > **Why `--head owner:branch`?**
@@ -241,4 +267,12 @@ If a label does not exist in the repository, create it first:
 
 ```bash
 gh label create "label name" --color "HEX" --description ""
+```
+
+### Reviewer Assignment (Optional)
+
+Ask the user if they want to assign reviewers. If yes, add them:
+
+```bash
+gh pr edit --add-reviewer "username1,username2"
 ```
