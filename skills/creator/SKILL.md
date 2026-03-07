@@ -108,9 +108,9 @@ Use the PR template from the current project first:
 
 If that file does not exist, fall back to the shared template that ships with this skills pack. Prefer this lookup order:
 
-1. `$SKILLS_PATH/templates/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
-2. `~/.codex/skills/creator/assets/pull_request_template.md` (common for Codex CLI installs)
-3. `templates/pull_request_template.md` (when working inside this skills repository)
+1. `$SKILLS_PATH/skills/creator/references/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
+2. `~/.codex/skills/creator/references/pull_request_template.md` (common for Codex CLI installs)
+3. `skills/creator/references/pull_request_template.md` (when working inside this skills repository)
 
 Fill in every section of the template. Additionally, ensure the description includes:
 
