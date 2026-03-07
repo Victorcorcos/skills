@@ -1,3 +1,8 @@
+---
+name: creator
+description: 'Analyze the current git diff, draft a pull request title and description, generate a pull_request.md file, and open the PR on GitHub with labels. Use when asked to draft, create, or open a pull request.'
+---
+
 # 🌍 Creator
 
 > **Purpose**: Analyze the current branch diff, draft a pull request title and description, generate a `pull_request.md` file, and open the PR on GitHub with appropriate labels.
@@ -108,9 +113,9 @@ Use the PR template from the current project first:
 
 If that file does not exist, fall back to the shared template that ships with this skills pack. Prefer this lookup order:
 
-1. `$SKILLS_PATH/templates/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
-2. `~/.codex/skills/creator/assets/pull_request_template.md` (common for Codex CLI installs)
-3. `templates/pull_request_template.md` (when working inside this skills repository)
+1. `$SKILLS_PATH/skills/creator/references/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
+2. `~/.codex/skills/creator/references/pull_request_template.md` (common for Codex CLI installs)
+3. `skills/creator/references/pull_request_template.md` (when working inside this skills repository)
 
 Fill in every section of the template. Additionally, ensure the description includes:
 

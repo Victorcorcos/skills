@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Sync skills into Claude Code and Codex CLI skill targets."""
 from __future__ import annotations
 
 import argparse
@@ -6,19 +7,15 @@ import os
 from pathlib import Path
 
 
-SKILL_DESCRIPTIONS: dict[str, str] = {
-    "planner": "Break down a feature request into concrete implementation steps and checklists. Use when asked to plan work, scope tasks, or produce an implementation plan.",
-    "improver": "Review code for Clean Code, security, and performance issues, then apply fixes directly. Use when asked to improve code quality and implement fixes.",
-    "bdder": "Improve tests using Behavior Driven Development (BDD) structure and naming conventions. Use when asked to rewrite or improve tests in a BDD style.",
-    "creator": "Analyze the current git diff and draft a pull request title and description, including test guidance, and generate pull_request.md. Use when asked to draft or create a pull request description/title.",
-    "breaker": "Analyze a large set of changes and propose how to split it into smaller, reviewable pull requests. Use when asked to split a PR or reduce diff size.",
-    "fixer": "Address PR review feedback by proposing and implementing best-practice fixes. Use when asked to resolve review comments or follow-up changes.",
-    "reviewer": "Perform a code review focused on Clean Code, security, and performance. Use when asked for a code review or risk assessment.",
-}
-
-
-def yaml_single_quote(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
+SKILLS: tuple[str, ...] = (
+    "bdder",
+    "breaker",
+    "creator",
+    "fixer",
+    "improver",
+    "planner",
+    "reviewer",
+)
 
 
 def repo_root() -> Path:
@@ -34,21 +31,18 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def build_codex_skill(name: str, body: str) -> str:
-    description = SKILL_DESCRIPTIONS.get(name)
-    if not description:
-        raise SystemExit(f"Missing SKILL_DESCRIPTIONS entry for: {name}")
+def strip_frontmatter(markdown: str) -> str:
+    """Remove YAML frontmatter from SKILL.md before installing as a Claude command."""
+    lines = markdown.splitlines(keepends=True)
+    if not lines:
+        return markdown
+    if lines[0].strip() != "---":
+        return markdown
 
-    frontmatter = "\n".join(
-        [
-            "---",
-            f"name: {name}",
-            f"description: {yaml_single_quote(description)}",
-            "---",
-            "",
-        ]
-    )
-    return frontmatter + body.lstrip("\n")
+    for index in range(1, len(lines)):
+        if lines[index].strip() == "---":
+            return "".join(lines[index + 1 :]).lstrip("\n")
+    return markdown
 
 
 def sync(
@@ -58,55 +52,51 @@ def sync(
     claude_out_dir: Path | None,
     codex_out_dir: Path | None,
 ) -> None:
-    root = repo_root()
-
-    if not src_dir.exists():
-        raise SystemExit(f"Missing source dir: {src_dir}")
-
-    sources = sorted(src_dir.glob("*.md"))
-    if not sources:
-        raise SystemExit(f"No skills found in: {src_dir}")
-
     if not claude_out_dir and not codex_out_dir:
-        raise SystemExit("Nothing to do: set --claude-out and/or --codex-out (or use --install).")
+        raise SystemExit(
+            "Nothing to do: pass --install, --claude-out, or --codex-out."
+        )
 
-    for src in sources:
-        name = src.stem
+    for name in SKILLS:
+        src = src_dir / name / "SKILL.md"
+        if not src.exists():
+            raise SystemExit(f"Missing skill file: {src}")
         body = src.read_text(encoding="utf-8")
 
         if write:
             if claude_out_dir:
-                claude_out = claude_out_dir / f"{name}.md"
-                write_text(claude_out, body)
+                # Claude Code commands: write a frontmatter-stripped view of the skill.
+                dst = claude_out_dir / f"{name}.md"
+                write_text(dst, strip_frontmatter(body))
+                print(f"Written  (Claude): {dst}")
             if codex_out_dir:
-                codex_out = codex_out_dir / name / "SKILL.md"
-                write_text(codex_out, build_codex_skill(name, body))
+                # Codex CLI: write the canonical source skill as-is.
+                dst = codex_out_dir / name / "SKILL.md"
+                write_text(dst, body)
+                print(f"Written  (Codex):  {dst}")
         else:
             if claude_out_dir:
                 print(str(claude_out_dir / f"{name}.md"))
             if codex_out_dir:
                 print(str(codex_out_dir / name / "SKILL.md"))
 
-    pr_template_src = root / "templates" / "pull_request_template.md"
-    if codex_out_dir and pr_template_src.exists():
-        pr_template_out = codex_out_dir / "creator" / "assets" / "pull_request_template.md"
-        if write:
-            write_text(pr_template_out, pr_template_src.read_text(encoding="utf-8"))
-        else:
-            print(str(pr_template_out))
-
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Sync canonical skill prompts to Claude and Codex formats.")
+    parser = argparse.ArgumentParser(
+        description="Sync skills into Claude Code and Codex CLI."
+    )
     parser.add_argument(
         "--write",
         action="store_true",
-        help="Write outputs. Without this, prints the paths that would be written.",
+        help="Write synced skill files. Without this, prints the paths that would be written.",
     )
     parser.add_argument(
         "--install",
         action="store_true",
-        help="Install into the current working directory's .claude/commands and your Codex skills dir. Implies --write.",
+        help=(
+            "Install into the current working directory's .claude/commands and your "
+            "Codex skills dir. Implies --write."
+        ),
     )
     parser.add_argument(
         "--src",
@@ -116,50 +106,62 @@ def main() -> None:
     parser.add_argument(
         "--claude-out",
         default=None,
-        help="Claude commands output dir (default: <repo>/.claude/commands).",
+        help="Claude commands output dir (frontmatter removed).",
     )
     parser.add_argument(
         "--codex-out",
         default=None,
-        help="Codex skills output dir (default: <repo>/codex).",
+        help="Codex skills output dir.",
     )
     parser.add_argument(
         "--claude",
         action="store_true",
-        help="Write Claude outputs. If neither --claude nor --codex is given, both are written.",
+        help="Install Claude commands only. If neither --claude nor --codex is given, both are installed.",
     )
     parser.add_argument(
         "--codex",
         action="store_true",
-        help="Write Codex outputs. If neither --claude nor --codex is given, both are written.",
+        help="Install Codex skills only. If neither --claude nor --codex is given, both are installed.",
     )
     args = parser.parse_args()
+
     root = repo_root()
     src_dir = Path(args.src).expanduser() if args.src else (root / "skills")
-
     write = bool(args.write or args.install)
 
     def default_codex_skills_dir() -> Path:
-        codex_home = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))).expanduser()
+        codex_home = Path(
+            os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))
+        ).expanduser()
         return codex_home / "skills"
 
     if args.install:
-        # Install into the *current project* for Claude, and global Codex skills dir.
         claude_default = Path.cwd() / ".claude" / "commands"
         codex_default = default_codex_skills_dir()
     else:
-        # Build artifacts inside this skills repository.
         claude_default = root / ".claude" / "commands"
         codex_default = root / "codex"
 
     install_both = not args.claude and not args.codex
-    claude_out_dir = (Path(args.claude_out).expanduser() if args.claude_out else claude_default) if (args.claude or install_both) else None
-    codex_out_dir = (Path(args.codex_out).expanduser() if args.codex_out else codex_default) if (args.codex or install_both) else None
+    claude_out_dir = (
+        (Path(args.claude_out).expanduser() if args.claude_out else claude_default)
+        if (args.claude or install_both)
+        else None
+    )
+    codex_out_dir = (
+        (Path(args.codex_out).expanduser() if args.codex_out else codex_default)
+        if (args.codex or install_both)
+        else None
+    )
 
-    sync(write=write, src_dir=src_dir, claude_out_dir=claude_out_dir, codex_out_dir=codex_out_dir)
+    sync(
+        write=write,
+        src_dir=src_dir,
+        claude_out_dir=claude_out_dir,
+        codex_out_dir=codex_out_dir,
+    )
 
     if args.install and write:
-        # Make it obvious where things went; Codex installs are typically global (not in the project repo).
         if claude_out_dir:
             print(f"Installed Claude commands to: {claude_out_dir}")
         if codex_out_dir:

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Creator"
+  short_description: "Draft a pull request title and description from the current diff."
+  default_prompt: "Analyze the current git diff, draft a PR title and description, generate pull_request.md, and open the PR on GitHub."
+policy:
+  allow_implicit_invocation: false

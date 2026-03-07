@@ -1,3 +1,8 @@
+---
+name: bdder
+description: 'Analyze changed tests in the current branch and improve them using Behavior Driven Development principles. Use when asked to rewrite, restructure, or improve tests in a BDD style with readable, meaningful, and real-world focused test cases.'
+---
+
 # 🧪 BDDer
 
 > **Purpose**: Analyze the current branch diff, find created/changed automated tests, and improve them using Behavior Driven Development principles — making tests readable, meaningful, and real-world focused.

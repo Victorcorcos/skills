@@ -1,0 +1,6 @@
+interface:
+  display_name: "Breaker"
+  short_description: "TODO"
+  default_prompt: "TODO"
+policy:
+  allow_implicit_invocation: false

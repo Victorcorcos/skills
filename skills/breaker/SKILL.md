@@ -1,10 +1,15 @@
-# Improver
+---
+name: breaker
+description: 'TODO: Analyze a large set of changes and propose how to split it into smaller, reviewable pull requests.'
+---
+
+# Breaker
 
 > **Status**: 🚧 Under Construction
 
 ## Purpose
 
-<!-- TODO: Review code for Clean Code principles, Security, and Performance -- then fix all found issues and improvements directly -->
+<!-- TODO: Analyze large PRs and suggest how to split them -->
 
 ## When to Use
 
