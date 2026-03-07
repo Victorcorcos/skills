@@ -1,0 +1,6 @@
+interface:
+  display_name: "BDDer"
+  short_description: "Improve tests using Behavior Driven Development principles."
+  default_prompt: "Analyze the changed tests in this branch and improve them using BDD structure — readable, meaningful, and real-world focused."
+policy:
+  allow_implicit_invocation: false
