@@ -1,3 +1,8 @@
+---
+name: improver
+description: 'TODO: Review code for Clean Code, security, and performance issues, then apply fixes directly.'
+---
+
 # Improver
 
 > **Status**: 🚧 Under Construction

@@ -1,3 +1,8 @@
+---
+name: fixer
+description: 'TODO: Address PR review feedback by proposing and implementing best-practice fixes.'
+---
+
 # Fixer
 
 > **Status**: 🚧 Under Construction
