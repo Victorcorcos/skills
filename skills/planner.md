@@ -13,6 +13,7 @@ Before anything else, gather full context about what needs to be done.
 1. **Read the developer's task description** carefully.
 2. **Ask clarifying questions** if the task is ambiguous, underspecified, or has multiple valid interpretations. Do not guess — ask.
 3. **Identify constraints**: deadlines, dependencies, affected modules, backward compatibility requirements, performance targets.
+4. **Identify edge cases and failure scenarios**: Ask what should happen when things go wrong — invalid inputs, network failures, permission errors, concurrent access, empty/null data, rate limits, partial failures. Document the expected behavior for each relevant scenario.
 
 > If the developer has not provided a task description yet, stop and ask:
 >
@@ -86,6 +87,9 @@ Create a `PLAN.md` file at the repository root with this structure:
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 - [ ] [Tests pass after this section]
+**Edge cases**:
+- [ ] [What happens when X is null/empty?]
+- [ ] [What happens when Y fails?]
 
 ---
 
@@ -96,6 +100,9 @@ Create a `PLAN.md` file at the repository root with this structure:
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 - [ ] [Tests pass after this section]
+**Edge cases**:
+- [ ] [What happens when X is null/empty?]
+- [ ] [What happens when Y fails?]
 
 ---
 
