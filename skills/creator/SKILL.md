@@ -1,3 +1,8 @@
+---
+name: creator
+description: 'Analyze the current git diff, draft a pull request title and description, generate a pull_request.md file, and open the PR on GitHub with labels. Use when asked to draft, create, or open a pull request.'
+---
+
 # 🌍 Creator
 
 > **Purpose**: Analyze the current branch diff, draft a pull request title and description, generate a `pull_request.md` file, and open the PR on GitHub with appropriate labels.
