@@ -43,7 +43,7 @@ This repository supports:
 | 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 Ready |
 | 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
 | ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
-| 🩹 Fixer | `/fixer` | Resolve PR review feedback efficiently | 🟡 Pending |
+| 🩹 Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 Ready |
 | 🔍 Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
 
 ---
@@ -145,7 +145,7 @@ claude
 - 🧪 **BDDer** — Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - ✂️ **Breaker** — Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
-- 🩹 **Fixer** — Reads PR review comments and produces best-practice fixes for each piece of feedback.
+- 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
 - 🔍 **Reviewer** — Performs a code review focused on Clean Code principles, security vulnerabilities, and performance concerns.
 
 ---

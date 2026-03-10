@@ -1,6 +1,6 @@
 interface:
   display_name: "Fixer"
-  short_description: "TODO"
-  default_prompt: "TODO"
+  short_description: "Resolve PR review comments interactively with proposed solutions."
+  default_prompt: "Fetch the review comments on the current PR, filter actionable feedback, propose solutions for each comment, and walk me through resolving them one by one."
 policy:
   allow_implicit_invocation: false

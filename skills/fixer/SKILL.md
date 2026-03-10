@@ -1,29 +1,226 @@
 ---
 name: fixer
-description: 'TODO: Address PR review feedback by proposing and implementing best-practice fixes.'
+description: 'Read review comments on a GitHub Pull Request, filter actionable feedback, analyze each comment, propose up to three solutions, and walk the user through an interactive resolution flow. Use when asked to fix, address, or resolve PR review comments.'
 ---
 
-# Fixer
+# 🩹 Fixer
 
-> **Status**: 🚧 Under Construction
+> **Purpose**: Fetch all review comments from a GitHub Pull Request, filter out non-actionable noise, analyze each piece of feedback, propose up to three concrete solutions, and guide the user through resolving every comment interactively — one at a time.
 
-## Purpose
+Here is the desired workflow of this task in detail.
 
-<!-- TODO: Address PR review feedback with best-practice solutions -->
+---
 
-## When to Use
+## Step 0 — Resolve the Pull Request
 
-<!-- TODO: Define trigger conditions -->
+Determine which PR to work on. Use the following fallback chain:
 
-## Instructions
+1. If the user provided a PR number or URL, use that directly.
+2. Otherwise, detect the current branch and look up its open PR:
 
-<!-- TODO: Add detailed guidance -->
+```bash
+gh pr view --json number,title,url,body,headRefName,baseRefName
+```
 
-## Output Format
+If `gh` is not authenticated, tell the user:
 
-<!-- TODO: Specify expected output structure -->
+> "GitHub CLI is not authenticated. Please run `gh auth login` in another terminal and let me know when you're ready."
 
-## Examples
+Then **stop and wait** for the user's confirmation before continuing.
 
-<!-- TODO: Add good/bad examples -->
+Store the resolved PR number as `PR_NUMBER` and use it throughout.
 
+---
+
+## Step 1 — Gather PR Context
+
+Collect three pieces of context in parallel:
+
+### 1a — PR description and metadata
+
+```bash
+gh pr view "$PR_NUMBER" --json number,title,url,body,headRefName,baseRefName,author
+```
+
+### 1b — Full diff
+
+Fetch the diff to understand every code change in the PR:
+
+```bash
+gh pr diff "$PR_NUMBER"
+```
+
+### 1c — All review comments
+
+Fetch every review comment (inline code comments and review-level comments):
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments" --paginate
+```
+
+Also fetch top-level PR review bodies (the summary comments left when submitting a review):
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/reviews" --paginate
+```
+
+Read the full content of every changed file referenced by comments so you understand the surrounding context — not just the diff hunks.
+
+---
+
+## Step 2 — Filter Actionable Comments
+
+Not every comment requires a code change. Classify each comment into one of two buckets:
+
+| Bucket | Examples | Action |
+|--------|----------|--------|
+| **Actionable** | Bug report, code improvement request, naming suggestion, security concern, performance tip, question that implies a change, request for refactor | Keep — will be processed in Step 3 |
+| **Non-actionable** | "Nice!", "LGTM", "Cool", praise, acknowledgements, resolved/outdated threads, purely informational notes with no change requested | Skip — mention in the summary but do not process |
+
+Present a quick overview to the user:
+
+```
+## PR #42 — "Add payment retry logic"
+
+Found 8 review comments:
+- 5 actionable comments to resolve
+- 3 non-actionable (praise / acknowledgements) — skipped
+
+Let's walk through the 5 actionable comments one by one.
+```
+
+If **no actionable comments** are found, report that clearly and stop:
+
+> "I reviewed all comments on PR #42 and found no actionable feedback requiring code changes. All comments are informational or praise. Nothing to fix!"
+
+---
+
+## Step 3 — Analyze & Propose Solutions
+
+For each actionable comment, prepare:
+
+| Field | Description |
+|-------|-------------|
+| **#** | Sequential number (among actionable comments only) |
+| **Author** | Who left the comment |
+| **File** | File path and line number(s) the comment targets |
+| **Comment** | The reviewer's feedback (quoted) |
+| **Validity** | Is the comment valid? Brief explanation of why or why not |
+| **Solution 1** | First proposed fix — description and code diff |
+| **Solution 2** | Second proposed fix (alternative approach) — description and code diff |
+| **Solution 3** | Third proposed fix (if a meaningfully different option exists) — description and code diff |
+
+### Solution quality rules
+
+- Each solution must be **concrete**: show the actual code change as a diff, not just a description.
+- Solutions should represent **genuinely different approaches**, not minor variations of the same fix.
+- If only one or two meaningful solutions exist, present only those — do not fabricate a third just to fill a slot.
+- Solutions must **respect the existing codebase conventions** (naming, style, patterns).
+- Solutions must **not introduce new issues** (no security holes, no broken tests, no unrelated refactors).
+
+---
+
+## Step 4 — Interactive Comment-by-Comment Walkthrough
+
+Process each actionable comment **one at a time** in the following cycle:
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│  1. Announce: "Comment #N of M"                               │
+│  2. Show the reviewer's comment (quoted)                      │
+│  3. Show the current code in question                         │
+│  4. Explain whether the comment is valid and why              │
+│  5. Present each proposed solution with its code diff         │
+│  6. Ask the user for their decision                           │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### Decision prompt
+
+After presenting the solutions, ask the user:
+
+> **Comment #N — [Short summary]**
+> *by @author on `file:line`*
+>
+> Choose how to proceed:
+> 1. **Apply solution 1** — [one-line description]
+> 2. **Apply solution 2** — [one-line description]
+> 3. **Apply solution 3** — [one-line description] *(only if a third solution was proposed)*
+> 4. **Other** — I'll explain what I want instead
+> 5. **Skip** — Move to the next comment without changes
+
+### Handling each option
+
+- **1 / 2 / 3 — Apply solution N**: Apply the chosen fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then move to the next comment.
+
+- **4 — Other**: Read the user's explanation. Propose a revised solution based on their feedback. Show the updated diff. Ask again with the same options. Repeat until the user picks a numbered solution or skips.
+
+- **5 / skip / next**: Acknowledge the skip. Do not apply any change. Move to the next comment.
+
+### Between comments
+
+After resolving or skipping a comment, transition:
+
+> "Moving to comment #[N+1] of [M]..."
+
+---
+
+## Step 5 — Reply to Resolved Comments (Optional)
+
+After all comments have been processed, ask the user:
+
+> "Would you like me to reply to the resolved comments on GitHub to let reviewers know they've been addressed?"
+
+If the user agrees, for each comment where a fix was applied, post a reply:
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments/{comment_id}/replies" \
+  -f body="Addressed — applied [brief description of the fix]. Thanks for the feedback!"
+```
+
+Keep replies concise and professional. Do not reply to skipped comments.
+
+---
+
+## Step 6 — Final Summary
+
+After all comments have been addressed, present a summary:
+
+```
+## Fixer Complete — PR #42
+
+### Resolved
+- ✅ #1 — [Short description] (Solution 2 applied)
+- ✅ #3 — [Short description] (Solution 1 applied)
+- ✅ #4 — [Short description] (Custom solution applied)
+
+### Skipped
+- ⏭️ #2 — [Short description] (user chose to skip)
+- ⏭️ #5 — [Short description] (user chose to skip)
+
+### Non-Actionable (not processed)
+- 💬 @reviewer1: "Looks great!" (praise)
+- 💬 @reviewer2: "Nice refactor" (praise)
+
+### Stats
+- Total review comments: [T]
+- Actionable: [A]
+- Fixes applied: [X]
+- Skipped: [Y]
+- Non-actionable: [Z]
+```
+
+---
+
+## Quality Principles
+
+These principles apply throughout the workflow:
+
+- **Faithful to feedback**: Understand what the reviewer actually asked for. Do not misinterpret or over-extend their comment.
+- **Evidence-based**: Only propose fixes grounded in the actual code and the reviewer's feedback. Never fabricate issues.
+- **Concrete solutions**: Every proposed fix must include a real code diff — not just a description of what to change.
+- **One at a time**: Never batch-apply fixes. Each comment needs explicit user approval.
+- **Minimal changes**: Fix only what the reviewer asked about — do not refactor surrounding code unless the user requests it.
+- **Context-aware**: Respect existing codebase conventions. Propose fixes that match the project's style and patterns.
+- **No silent changes**: Never modify code without showing the user what will change first.
+- **Reviewer respect**: Treat every comment as worth considering, even if the proposed fix differs from what the reviewer suggested.
