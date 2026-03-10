@@ -11,6 +11,15 @@ Here is the desired workflow of this task in detail.
 
 ---
 
+## Non-Negotiables
+
+- **One comment at a time**: NEVER fix multiple comments in a single step. Each actionable comment must be presented, discussed, and resolved individually before moving to the next.
+- **Always use `AskUserQuestion` tool**: When asking the user to choose between solutions, you MUST use the `AskUserQuestion` tool with structured options. Do NOT present options as plain text and wait for a freeform response.
+- **No code changes before approval**: Do NOT apply any fix until the user has explicitly selected a solution via the `AskUserQuestion` tool response.
+- **Group related comments**: When multiple review comments target the same file and line, merge them into a single actionable item and address them together in one round.
+
+---
+
 ## Step 0 — Resolve the Pull Request
 
 Determine which PR to work on. Use the following fallback chain:
@@ -122,40 +131,56 @@ For each actionable comment, prepare:
 
 ## Step 4 — Interactive Comment-by-Comment Walkthrough
 
-Process each actionable comment **one at a time** in the following cycle:
+Process each actionable comment **one at a time** in the following cycle.
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│  1. Announce: "Comment #N of M"                               │
-│  2. Show the reviewer's comment (quoted)                      │
-│  3. Show the current code in question                         │
-│  4. Explain whether the comment is valid and why              │
-│  5. Present each proposed solution with its code diff         │
-│  6. Ask the user for their decision                           │
-└───────────────────────────────────────────────────────────────┘
-```
+**CRITICAL — This is the most important step. You MUST follow it exactly.**
 
-### Decision prompt
+- Do NOT batch-apply fixes or attempt to fix multiple comments at once.
+- Do NOT proceed to the next comment until the user has made a decision on the current one.
+- Do NOT skip presenting solutions or the decision prompt for any actionable comment.
+- Do NOT apply any code change before receiving the user's explicit choice.
 
-After presenting the solutions, ask the user:
+For each comment, follow this exact sequence:
 
-> **Comment #N — [Short summary]**
-> *by @author on `file:line`*
->
-> Choose how to proceed:
-> 1. **Apply solution 1** — [one-line description]
-> 2. **Apply solution 2** — [one-line description]
-> 3. **Apply solution 3** — [one-line description] *(only if a third solution was proposed)*
-> 4. **Other** — I'll explain what I want instead
-> 5. **Skip** — Move to the next comment without changes
+1. Announce: "Comment #N of M"
+2. Show the reviewer's comment (quoted)
+3. Show the current code in question
+4. Explain whether the comment is valid and why
+5. Present each proposed solution with its code diff
+6. Ask the user for their decision using the `AskUserQuestion` tool (see below)
+7. Wait for the user's response before doing anything else
+
+### Decision prompt — MUST use AskUserQuestion tool
+
+After presenting the solutions in text, you **MUST** use the `AskUserQuestion` tool to collect the user's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
+
+Build the options dynamically based on how many solutions were proposed (2 or 3):
+
+- **If 2 solutions proposed**, use these options:
+  1. `label: "Apply solution 1"`, `description: "[one-line description of solution 1]"`
+  2. `label: "Apply solution 2"`, `description: "[one-line description of solution 2]"`
+  3. `label: "Skip"`, `description: "Move to the next comment without changes"`
+
+- **If 3 solutions proposed**, use these options:
+  1. `label: "Apply solution 1"`, `description: "[one-line description of solution 1]"`
+  2. `label: "Apply solution 2"`, `description: "[one-line description of solution 2]"`
+  3. `label: "Apply solution 3"`, `description: "[one-line description of solution 3]"`
+  4. `label: "Skip"`, `description: "Move to the next comment without changes"`
+
+The question text must follow this format:
+> `"Comment #N — [Short summary]: how to proceed?"`
+
+Set `header` to `"Comment #N"` and `multiSelect` to `false`.
+
+The user can always select "Other" (automatically provided by the tool) to explain what they want instead.
 
 ### Handling each option
 
-- **1 / 2 / 3 — Apply solution N**: Apply the chosen fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then move to the next comment.
+- **Apply solution N**: Apply the chosen fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then move to the next comment.
 
-- **4 — Other**: Read the user's explanation. Propose a revised solution based on their feedback. Show the updated diff. Ask again with the same options. Repeat until the user picks a numbered solution or skips.
+- **Other** (user typed a custom response): Read the user's explanation. Propose a revised solution based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure. Repeat until the user picks a solution or skips.
 
-- **5 / skip / next**: Acknowledge the skip. Do not apply any change. Move to the next comment.
+- **Skip**: Acknowledge the skip. Do not apply any change. Move to the next comment.
 
 ### Between comments
 
