@@ -1,6 +1,6 @@
 interface:
   display_name: "Reviewer"
-  short_description: "TODO"
-  default_prompt: "TODO"
+  short_description: "Review code and post inline PR comments with code suggestions for each approved finding."
+  default_prompt: "Use this skill to review the current branch for clean code, security, performance, and convention issues, then walk me through each finding. For approved findings, post inline comments with code suggestions on the associated GitHub pull request."
 policy:
   allow_implicit_invocation: false
