@@ -57,10 +57,9 @@ flowchart LR
     B --> D[🧪 bdder]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
-    E --> F[Code Review]
+    E --> I[🔍 reviewer]
     E -->|if large| G[✂️ breaker]
-    G --> F
-    C -->|post PR comments| I[🔍 reviewer]
+    G --> F[Code Review]
     I --> F
     F --> H[🩹 fixer]
 
