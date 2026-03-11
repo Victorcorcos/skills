@@ -44,7 +44,7 @@ This repository supports:
 | 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
 | ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
 | 🩹 Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 Ready |
-| 🔍 Reviewer | `/reviewer` | Review code for Clean Code, Security & Performance | 🟡 Pending |
+| 🔍 Reviewer | `/reviewer` | Review code and post inline PR comments with code suggestions for each approved finding | 🟢 Ready |
 
 ---
 
@@ -60,6 +60,8 @@ flowchart LR
     E --> F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
+    C -->|post PR comments| I[🔍 reviewer]
+    I --> F
     F --> H[🩹 fixer]
 
     style A fill:#2563EB,color:#fff
@@ -69,6 +71,7 @@ flowchart LR
     style F fill:#1e293b,color:#fff
     style G fill:#DC2626,color:#fff
     style H fill:#DB2777,color:#fff
+    style I fill:#7C3AED,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 
@@ -141,12 +144,12 @@ claude
 ## 📖 Skill Descriptions
 
 - 🗺️ **Planner** — Investigates the codebase, plans tasks in structured checkpoint-driven sections saved as `PLAN.md`, then executes section by section with human approval gates.
-- ✨ **Improver** — Reviews branch code for Clean Code violations, security vulnerabilities, and performance issues, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
+- ✨ **Improver** — Reviews branch code for Clean Code violations, security vulnerabilities, performance issues, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
 - 🧪 **BDDer** — Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - ✂️ **Breaker** — Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
-- 🔍 **Reviewer** — Performs a code review focused on Clean Code principles, security vulnerabilities, and performance concerns.
+- 🔍 **Reviewer** — Reviews branch code for Clean Code violations, security vulnerabilities, performance issues, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, without modifying local files.
 
 ---
 
