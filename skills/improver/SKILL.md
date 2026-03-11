@@ -1,11 +1,11 @@
 ---
 name: improver
-description: 'Review changed code on the current branch for Clean Code, security, and performance issues, then walk the user through each finding one by one with proposed fixes and interactive approval. Use when asked to improve, review and fix, or audit code quality on a branch.'
+description: 'Review changed code on the current branch for Clean Code, security, performance, and repository/framework convention issues, then walk the user through each finding one by one with proposed fixes and interactive approval. Use when asked to improve, review and fix, or audit code quality on a branch.'
 ---
 
 # ✨ Improver
 
-> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, and performance issues, then walk the user through each finding one by one — proposing a fix, showing the diff, and asking for approval before applying it.
+> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, and repository/framework convention mismatches, then walk the user through each finding one by one — proposing a fix, showing the diff, and asking for approval before applying it.
 
 Here is the desired workflow of this task in detail.
 
@@ -46,28 +46,70 @@ git diff "$BASE_REF" --name-only
 
 ---
 
-## Step 2 — Analyze the Changed Code
+## Step 2 — Understand Context
 
-Read every changed file in full (not just the diff hunks) to understand context. For each file, identify issues in three categories:
+### Read the changed files
 
-1. **Code Smells & Clean Code violations**
-2. **Security vulnerabilities**
-3. **Performance issues**
+Read every changed file **in full** (not just the diff hunks) to understand context. You need the surrounding code to judge whether something is truly an issue.
 
-Use the reference tables below as your checklist. Only flag issues that are **actually present in the changed code** — do not fabricate findings to fill a quota.
+### Read repository conventions
 
-> **Important**: Focus exclusively on code introduced or modified in this branch. Do not flag pre-existing issues in unchanged code unless they are directly affected by the new changes.
+Read `README.md`, `AGENTS.md`, and `CLAUDE.md` at the repository root (if they exist). These files define the project's conventions, architecture decisions, and coding standards. You will need them for the Convention category in Step 3.
+
+### Read sibling files for convention discovery
+
+For each changed file, **read 1–3 similar files** in the same directory or module. For example:
+
+- If the branch touches `src/services/userService.ts`, also read other files in `src/services/` (e.g., `orderService.ts`, `paymentService.ts`).
+- If the branch touches `app/models/user.rb`, also read other models in `app/models/`.
+- If the branch touches a test file, read other test files in the same test directory.
+
+This lets you discover the **actual patterns the codebase uses** — naming conventions, error handling style, import ordering, class structure, decorator usage, etc. — so you can flag deviations in the changed code.
 
 ---
 
-## Step 3 — Build the Findings Report
+## Step 3 — Analyze the Changed Code
+
+For each changed file, identify issues in **four categories**:
+
+1. **Code Smell** — Clean Code violations, maintainability problems
+2. **Security** — Vulnerabilities, unsafe patterns
+3. **Performance** — Inefficiencies, resource waste
+4. **Convention** — Repository/framework alignment violations
+
+Use the reference tables below as your checklist for categories 1–3. For category 4 (Convention), use what you learned from reading `README.md`, `AGENTS.md`, `CLAUDE.md`, and sibling files in Step 2.
+
+However, **the tables are just a starting point** — you can and should flag issues that go beyond what is cataloged in the tables.
+
+> **Important**: Focus exclusively on code introduced or modified in this branch. Do not flag pre-existing issues in unchanged code unless they are directly affected by the new changes.
+
+### What to look for in each category
+
+**Code Smell**: See Table A. Look for long methods, duplicate code, deep nesting, dead code, naming issues, SRP/DRY/KISS violations, overengineering, etc.
+
+**Security**: See Table B. Look for injection risks, hardcoded credentials, broken access control, cryptographic misuse, unsafe deserialization, etc.
+
+**Performance**: See Table C. Look for N+1 queries, missing indexes, memory leaks, blocking I/O, unbounded results, excessive DOM manipulation, etc.
+
+**Convention**: No table — this is based on what you observed in the repository. Look for:
+- Naming patterns that differ from sibling files (e.g., camelCase where the repo uses snake_case)
+- Structural patterns that differ (e.g., logic in a controller when the repo puts it in services)
+- Import/require ordering that differs from the established style
+- Error handling approaches that differ from sibling files
+- Missing or extra decorators, annotations, or middleware compared to similar files
+- Framework idiom violations (e.g., using raw SQL when the repo uses an ORM everywhere)
+- Contradictions with rules stated in `README.md`, `AGENTS.md`, or `CLAUDE.md`
+
+---
+
+## Step 4 — Build the Findings Report
 
 For each issue found, record:
 
 | Field | Description |
 |-------|-------------|
 | **#** | Sequential number |
-| **Category** | `Code Smell`, `Security`, or `Performance` |
+| **Category** | `Code Smell`, `Security`, `Performance`, or `Convention` |
 | **Severity** | `Critical`, `High`, `Medium`, or `Low` |
 | **File** | File path and line number(s) |
 | **Issue** | Short description of what is wrong |
@@ -84,6 +126,7 @@ Present all findings to the user as a numbered summary table:
 | 1 | Security | Critical | src/auth.ts:42 | Hardcoded API key |
 | 2 | Code Smell | Medium | src/utils.ts:15 | Long method (87 lines) |
 | 3 | Performance | High | src/db.ts:23 | N+1 query in loop |
+| 4 | Convention | Medium | src/api.ts:8 | Uses raw SQL; repo convention is ORM |
 | ... | ... | ... | ... | ... |
 
 I found [N] issues. Let's walk through each one.
@@ -93,11 +136,11 @@ Sort findings by severity: Critical > High > Medium > Low.
 
 If **no issues are found**, report that clearly and stop:
 
-> "I reviewed the changes on this branch and found no code smells, security issues, or performance problems. The code looks good!"
+> "I reviewed the changes on this branch and found no code smells, security issues, performance problems, or convention mismatches. The code looks good!"
 
 ---
 
-## Step 4 — Interactive Fix-by-Fix Walkthrough
+## Step 5 — Interactive Fix-by-Fix Walkthrough
 
 Process each finding **one at a time** in the following cycle:
 
@@ -136,7 +179,7 @@ After applying or skipping an issue, move to the next one:
 
 ---
 
-## Step 5 — Final Report
+## Step 6 — Final Report
 
 After all issues have been addressed, present a summary:
 
@@ -160,7 +203,9 @@ After all issues have been addressed, present a summary:
 
 ## Reference Tables
 
-The tables below are your checklists. Use them to identify issues in the analyzed code. Not every item will apply to every codebase — only flag what is **actually present** in the changed code.
+The tables below are your checklists for categories 1–3. Use them to identify issues in the analyzed code. Not every item will apply to every codebase — only flag what is **actually present** in the changed code.
+
+**Remember**: These tables are a starting point, not an exhaustive list. If you spot an issue that is not in these tables but is clearly a problem, flag it anyway.
 
 ---
 
@@ -287,3 +332,4 @@ These principles apply throughout the review:
 - **Minimal changes**: Fix only the identified issue — do not refactor surrounding code unless the user asks.
 - **Context-aware**: Respect existing codebase conventions. Propose fixes that match the project's style.
 - **No silent changes**: Never modify code without showing the user what will change first.
+- **Beyond the tables**: The reference tables are a starting point. Flag any real issue you find, even if it is not listed in the tables.
