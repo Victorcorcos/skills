@@ -92,7 +92,8 @@ However, **the tables are just a starting point** — you can and should flag is
 **Performance**: See Table C. Look for N+1 queries, missing indexes, memory leaks, blocking I/O, unbounded results, excessive DOM manipulation, etc.
 
 **Convention**: No table — this is based on what you observed in the repository. Look for:
-- Naming patterns that differ from sibling files (e.g., camelCase where the repo uses snake_case)
+- File naming patterns that differ from sibling files (e.g., `kebab-case.ts` where the repo uses `PascalCase.ts`, or `user_service.py` where the repo uses `userService.py`)
+- Class, method, and variable naming patterns that differ from sibling files (e.g., camelCase where the repo uses snake_case)
 - Structural patterns that differ (e.g., logic in a controller when the repo puts it in services)
 - Import/require ordering that differs from the established style
 - Error handling approaches that differ from sibling files
