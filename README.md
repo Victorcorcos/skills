@@ -17,11 +17,13 @@ This repository supports:
 
 - **Codex CLI** — skills installed into `~/.codex/skills/<skill-name>/SKILL.md`
 - **Claude Code** — compatibility command files installed into `.claude/commands/` and invoked as `/creator`, `/planner`, etc.
+- **OpenCode** — skills installed into `~/.config/opencode/skills/<skill-name>/` and auto-discovered by the `skill` tool
 
 > [!TIP]
 > Quick start:
 > - Codex CLI: `python3 "$SKILLS_PATH/scripts/sync.py" --install --codex`
 > - Claude Code: `cd <your-project>` then `python3 "$SKILLS_PATH/scripts/sync.py" --install --claude`
+> - OpenCode: `python3 "$SKILLS_PATH/scripts/sync.py" --install --opencode`
 
 > [!NOTE]
 > Every skill is a template. Fork this repo, tweak the prompts to match your team's conventions, and commit your own version.
@@ -98,13 +100,21 @@ python3 "$SKILLS_PATH/scripts/sync.py" --install --claude
 
 This writes each skill into `<project>/.claude/commands/<skill>.md` with YAML frontmatter removed for Claude command compatibility.
 
+### 🟣 OpenCode - Globally
+
+```bash
+python3 "$SKILLS_PATH/scripts/sync.py" --install --opencode
+```
+
+This installs every skill from `skills/*` into `~/.config/opencode/skills/<skill-name>/`. Skills are auto-discovered and listed in the `skill` tool.
+
 ### ⚡ Install all at once
 
 ```bash
 python3 "$SKILLS_PATH/scripts/sync.py" --install
 ```
 
-This installs Claude and Codex targets.
+This installs Claude, Codex, and OpenCode targets.
 
 ### 🔍 Dry run (print paths without writing)
 
@@ -136,6 +146,17 @@ claude
 /planner
 /creator
 /bdder
+```
+
+### 🟣 OpenCode
+
+```bash
+cd <your-project>
+opencode
+# Skills are auto-discovered and listed in the skill tool:
+Use the planner skill to plan the implementation of the new feature
+# or:
+Use the creator skill to generate a PR title and description
 ```
 
 ---

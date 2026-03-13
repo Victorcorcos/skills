@@ -5,7 +5,7 @@
 This repository is the source of truth for reusable AI skills.
 
 - Author skills once under `skills/<skill-name>/`.
-- Install them into Codex CLI and Claude Code with repository tooling.
+- Install them into Codex CLI, Claude Code, and OpenCode with repository tooling.
 - Optimize for portable skill folders first, and provider-specific metadata second.
 
 ## Canonical Skill Layout
@@ -52,7 +52,7 @@ Use these rules:
 - Include at least `name` and `description`.
 - Keep `name` identical to the folder name and use kebab-case.
 - Write `description` as routing guidance: when to use the skill, what problem it solves, and any important trigger constraints.
-- Keep shared `SKILL.md` content portable across Codex CLI and Claude Code whenever possible.
+- Keep shared `SKILL.md` content portable across Codex CLI, Claude Code, and OpenCode whenever possible.
 - Put OpenAI-specific UI and policy metadata in `agents/openai.yaml`, not in the shared instructions body.
 
 ## Skill Authoring Rules
@@ -94,6 +94,12 @@ Only declare dependencies that are real and maintained.
 - Claude uses the skill `description` to decide whether to load a skill, so the description must be specific and action-oriented.
 - Keep the main skill file focused and move large supporting material into adjacent files.
 
+### OpenCode
+
+- Install global skills under `~/.config/opencode/skills/<skill-name>/SKILL.md`.
+- OpenCode is compatible with Claude-style skills and also recognizes shared skill folder patterns.
+- Unknown frontmatter fields are tolerated, but portable frontmatter remains the safest default for shared source files.
+
 ## Repository-Specific Maintenance
 
 When adding, removing, or renaming a skill in this repository:
@@ -114,6 +120,7 @@ Author new skills against the modern folder-based skill pattern:
 
 - Codex CLI: `.agents/skills/` or `~/.codex/skills/`
 - Claude Code: `.claude/skills/`
+- OpenCode: `~/.config/opencode/skills/`
 
 Then keep the installer and documentation aligned with that source model.
 

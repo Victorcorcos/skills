@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Sync skills into Claude Code and Codex CLI skill targets."""
+"""Sync skills into Claude Code, Codex CLI, and OpenCode skill targets."""
 from __future__ import annotations
 
 import argparse
 import os
 from pathlib import Path
+import shutil
 
 
 SKILLS: tuple[str, ...] = (
@@ -31,6 +32,14 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def copy_skill_dir(src: Path, dst: Path) -> None:
+    if dst.is_symlink() or dst.is_file():
+        dst.unlink()
+    elif dst.exists():
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+
+
 def strip_frontmatter(markdown: str) -> str:
     """Remove YAML frontmatter from SKILL.md before installing as a Claude command."""
     lines = markdown.splitlines(keepends=True)
@@ -51,10 +60,11 @@ def sync(
     src_dir: Path,
     claude_out_dir: Path | None,
     codex_out_dir: Path | None,
+    opencode_out_dir: Path | None,
 ) -> None:
-    if not claude_out_dir and not codex_out_dir:
+    if not claude_out_dir and not codex_out_dir and not opencode_out_dir:
         raise SystemExit(
-            "Nothing to do: pass --install, --claude-out, or --codex-out."
+            "Nothing to do: pass --install, --claude-out, --codex-out, or --opencode-out."
         )
 
     for name in SKILLS:
@@ -74,16 +84,23 @@ def sync(
                 dst = codex_out_dir / name / "SKILL.md"
                 write_text(dst, body)
                 print(f"Written  (Codex):  {dst}")
+            if opencode_out_dir:
+                # OpenCode: copy the canonical skill folder, including provider metadata.
+                dst = opencode_out_dir / name
+                copy_skill_dir(src_dir / name, dst)
+                print(f"Written  (OpenCode): {dst}")
         else:
             if claude_out_dir:
                 print(str(claude_out_dir / f"{name}.md"))
             if codex_out_dir:
                 print(str(codex_out_dir / name / "SKILL.md"))
+            if opencode_out_dir:
+                print(str(opencode_out_dir / name / "SKILL.md"))
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Sync skills into Claude Code and Codex CLI."
+        description="Sync skills into Claude Code, Codex CLI, and OpenCode."
     )
     parser.add_argument(
         "--write",
@@ -95,7 +112,7 @@ def main() -> None:
         action="store_true",
         help=(
             "Install into the current working directory's .claude/commands and your "
-            "Codex skills dir. Implies --write."
+            "Codex/OpenCode skills dirs. Implies --write."
         ),
     )
     parser.add_argument(
@@ -114,14 +131,24 @@ def main() -> None:
         help="Codex skills output dir.",
     )
     parser.add_argument(
+        "--opencode-out",
+        default=None,
+        help="OpenCode skills output dir.",
+    )
+    parser.add_argument(
         "--claude",
         action="store_true",
-        help="Install Claude commands only. If neither --claude nor --codex is given, both are installed.",
+        help="Install Claude commands only. If no target flags are given, all targets are installed.",
     )
     parser.add_argument(
         "--codex",
         action="store_true",
-        help="Install Codex skills only. If neither --claude nor --codex is given, both are installed.",
+        help="Install Codex skills only. If no target flags are given, all targets are installed.",
+    )
+    parser.add_argument(
+        "--opencode",
+        action="store_true",
+        help="Install OpenCode skills only. If no target flags are given, all targets are installed.",
     )
     args = parser.parse_args()
 
@@ -138,19 +165,26 @@ def main() -> None:
     if args.install:
         claude_default = Path.cwd() / ".claude" / "commands"
         codex_default = default_codex_skills_dir()
+        opencode_default = Path.home() / ".config" / "opencode" / "skills"
     else:
         claude_default = root / ".claude" / "commands"
         codex_default = root / "codex"
+        opencode_default = root / "opencode"
 
-    install_both = not args.claude and not args.codex
+    install_all = not args.claude and not args.codex and not args.opencode
     claude_out_dir = (
         (Path(args.claude_out).expanduser() if args.claude_out else claude_default)
-        if (args.claude or install_both)
+        if (args.claude or install_all)
         else None
     )
     codex_out_dir = (
         (Path(args.codex_out).expanduser() if args.codex_out else codex_default)
-        if (args.codex or install_both)
+        if (args.codex or install_all)
+        else None
+    )
+    opencode_out_dir = (
+        (Path(args.opencode_out).expanduser() if args.opencode_out else opencode_default)
+        if (args.opencode or install_all)
         else None
     )
 
@@ -159,6 +193,7 @@ def main() -> None:
         src_dir=src_dir,
         claude_out_dir=claude_out_dir,
         codex_out_dir=codex_out_dir,
+        opencode_out_dir=opencode_out_dir,
     )
 
     if args.install and write:
@@ -166,6 +201,8 @@ def main() -> None:
             print(f"Installed Claude commands to: {claude_out_dir}")
         if codex_out_dir:
             print(f"Installed Codex skills to: {codex_out_dir}")
+        if opencode_out_dir:
+            print(f"Installed OpenCode skills to: {opencode_out_dir}")
 
 
 if __name__ == "__main__":
