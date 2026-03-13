@@ -207,11 +207,11 @@ After all comments have been processed, ask the user:
 
 > "Would you like me to reply to the resolved comments on GitHub to let reviewers know they've been addressed?"
 
-If the user agrees, for each comment where a fix was applied, post a reply:
+If the user agrees, for each comment where a fix was applied, post a reply using the commit hash from that fix:
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments/{comment_id}/replies" \
-  -f body="Addressed — applied [brief description of the fix]. Thanks for the feedback!"
+  -f body="Addressed in $COMMIT_HASH — [brief description of the fix]. Thanks for the feedback!"
 ```
 
 Keep replies concise and professional. Do not reply to skipped comments.
