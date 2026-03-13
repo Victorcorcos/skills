@@ -1,11 +1,11 @@
 ---
 name: fixer
-description: 'Read review comments on a GitHub Pull Request, filter actionable feedback, analyze each comment, propose up to three solutions, and walk the user through an interactive resolution flow. Use when asked to fix, address, or resolve PR review comments.'
+description: 'Read review comments on a GitHub Pull Request, filter actionable feedback, analyze each comment, propose a solution, and walk the user through an interactive resolution flow. Use when asked to fix, address, or resolve PR review comments.'
 ---
 
 # 🩹 Fixer
 
-> **Purpose**: Fetch all review comments from a GitHub Pull Request, filter out non-actionable noise, analyze each piece of feedback, propose up to three concrete solutions, and guide the user through resolving every comment interactively — one at a time.
+> **Purpose**: Fetch all review comments from a GitHub Pull Request, filter out non-actionable noise, analyze each piece of feedback, propose a concrete solution, and guide the user through resolving every comment interactively — one at a time.
 
 Here is the desired workflow of this task in detail.
 
@@ -14,7 +14,7 @@ Here is the desired workflow of this task in detail.
 ## Non-Negotiables
 
 - **One comment at a time**: NEVER fix multiple comments in a single step. Each actionable comment must be presented, discussed, and resolved individually before moving to the next.
-- **Always use `AskUserQuestion` tool**: When asking the user to choose between solutions, you MUST use the `AskUserQuestion` tool with structured options. Do NOT present options as plain text and wait for a freeform response.
+- **Always use `AskUserQuestion` tool**: When asking the user to confirm a solution, you MUST use the `AskUserQuestion` tool with structured options. Do NOT present options as plain text and wait for a freeform response.
 - **No code changes before approval**: Do NOT apply any fix until the user has explicitly selected a solution via the `AskUserQuestion` tool response.
 - **Group related comments**: When multiple review comments target the same file and line, merge them into a single actionable item and address them together in one round.
 
@@ -104,7 +104,7 @@ If **no actionable comments** are found, report that clearly and stop:
 
 ---
 
-## Step 3 — Analyze & Propose Solutions
+## Step 3 — Analyze & Propose a Solution
 
 For each actionable comment, prepare:
 
@@ -115,17 +115,13 @@ For each actionable comment, prepare:
 | **File** | File path and line number(s) the comment targets |
 | **Comment** | The reviewer's feedback (quoted) |
 | **Validity** | Is the comment valid? Brief explanation of why or why not |
-| **Solution 1** | First proposed fix — description and code diff |
-| **Solution 2** | Second proposed fix (alternative approach) — description and code diff |
-| **Solution 3** | Third proposed fix (if a meaningfully different option exists) — description and code diff |
+| **Solution** | Proposed fix — description and code diff |
 
 ### Solution quality rules
 
-- Each solution must be **concrete**: show the actual code change as a diff, not just a description.
-- Solutions should represent **genuinely different approaches**, not minor variations of the same fix.
-- If only one or two meaningful solutions exist, present only those — do not fabricate a third just to fill a slot.
-- Solutions must **respect the existing codebase conventions** (naming, style, patterns).
-- Solutions must **not introduce new issues** (no security holes, no broken tests, no unrelated refactors).
+- The solution must be **concrete**: show the actual code change as a diff, not just a description.
+- The solution must **respect the existing codebase conventions** (naming, style, patterns).
+- The solution must **not introduce new issues** (no security holes, no broken tests, no unrelated refactors).
 
 ---
 
@@ -137,7 +133,7 @@ Process each actionable comment **one at a time** in the following cycle.
 
 - Do NOT batch-apply fixes or attempt to fix multiple comments at once.
 - Do NOT proceed to the next comment until the user has made a decision on the current one.
-- Do NOT skip presenting solutions or the decision prompt for any actionable comment.
+- Do NOT skip presenting the solution or the decision prompt for any actionable comment.
 - Do NOT apply any code change before receiving the user's explicit choice.
 
 For each comment, follow this exact sequence:
@@ -146,26 +142,18 @@ For each comment, follow this exact sequence:
 2. Show the reviewer's comment (quoted)
 3. Show the current code in question
 4. Explain whether the comment is valid and why
-5. Present each proposed solution with its code diff
+5. Present the proposed solution with its code diff
 6. Ask the user for their decision using the `AskUserQuestion` tool (see below)
 7. Wait for the user's response before doing anything else
 
 ### Decision prompt — MUST use AskUserQuestion tool
 
-After presenting the solutions in text, you **MUST** use the `AskUserQuestion` tool to collect the user's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
+After presenting the solution in text, you **MUST** use the `AskUserQuestion` tool to collect the user's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
 
-Build the options dynamically based on how many solutions were proposed (2 or 3):
+Always use these two options:
 
-- **If 2 solutions proposed**, use these options:
-  1. `label: "Apply solution 1"`, `description: "[one-line description of solution 1]"`
-  2. `label: "Apply solution 2"`, `description: "[one-line description of solution 2]"`
-  3. `label: "Skip"`, `description: "Move to the next comment without changes"`
-
-- **If 3 solutions proposed**, use these options:
-  1. `label: "Apply solution 1"`, `description: "[one-line description of solution 1]"`
-  2. `label: "Apply solution 2"`, `description: "[one-line description of solution 2]"`
-  3. `label: "Apply solution 3"`, `description: "[one-line description of solution 3]"`
-  4. `label: "Skip"`, `description: "Move to the next comment without changes"`
+1. `label: "Apply solution"`, `description: "[one-line description of the solution]"`
+2. `label: "Skip"`, `description: "Move to the next comment without changes"`
 
 The question text must follow this format:
 > `"Comment #N — [Short summary]: how to proceed?"`
@@ -176,11 +164,34 @@ The user can always select "Other" (automatically provided by the tool) to expla
 
 ### Handling each option
 
-- **Apply solution N**: Apply the chosen fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then move to the next comment.
+- **Apply solution**: Apply the fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then commit the change (see "Committing after each fix" below). Then move to the next comment.
 
 - **Other** (user typed a custom response): Read the user's explanation. Propose a revised solution based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure. Repeat until the user picks a solution or skips.
 
 - **Skip**: Acknowledge the skip. Do not apply any change. Move to the next comment.
+
+### Committing after each fix
+
+After every fix is applied, immediately commit **only that change** before moving on:
+
+1. Stage only the files modified by this fix.
+2. Build the commit title in this format:
+   > `fix (review): [short imperative description of what was changed]`
+3. Build the commit body with:
+   - `PR #<PR_NUMBER>, comment #<N> — <reviewer's feedback quoted briefly>`
+   - A one-sentence explanation of the solution that was applied.
+4. Create the commit.
+
+**Example commit:**
+
+```
+fix (review): extract retry delay into a named constant
+
+PR #42, comment #2 — "Magic number 3000 is unclear"
+Replaced the inline 3000 ms literal with a RETRY_DELAY_MS constant to improve readability.
+```
+
+Do NOT squash multiple fixes into one commit. Each resolved comment gets its own commit.
 
 ### Between comments
 
@@ -215,9 +226,9 @@ After all comments have been addressed, present a summary:
 ## Fixer Complete — PR #42
 
 ### Resolved
-- ✅ #1 — [Short description] (Solution 2 applied)
-- ✅ #3 — [Short description] (Solution 1 applied)
-- ✅ #4 — [Short description] (Custom solution applied)
+- ✅ #1 — [Short description] (solution applied)
+- ✅ #3 — [Short description] (solution applied)
+- ✅ #4 — [Short description] (custom solution applied)
 
 ### Skipped
 - ⏭️ #2 — [Short description] (user chose to skip)
@@ -243,7 +254,7 @@ These principles apply throughout the workflow:
 
 - **Faithful to feedback**: Understand what the reviewer actually asked for. Do not misinterpret or over-extend their comment.
 - **Evidence-based**: Only propose fixes grounded in the actual code and the reviewer's feedback. Never fabricate issues.
-- **Concrete solutions**: Every proposed fix must include a real code diff — not just a description of what to change.
+- **Concrete solution**: Every proposed fix must include a real code diff — not just a description of what to change.
 - **One at a time**: Never batch-apply fixes. Each comment needs explicit user approval.
 - **Minimal changes**: Fix only what the reviewer asked about — do not refactor surrounding code unless the user requests it.
 - **Context-aware**: Respect existing codebase conventions. Propose fixes that match the project's style and patterns.
