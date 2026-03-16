@@ -1,5 +1,5 @@
 interface:
-  display_name: "Improver"
+  display_name: "✨ Improver"
   short_description: "Review branch code for code quality, test quality, security, performance, and conventions, then fix interactively."
   default_prompt: "Analyze the current branch diff for code smells, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walk me through each finding with proposed fixes."
 policy:

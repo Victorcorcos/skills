@@ -1,5 +1,5 @@
 interface:
-  display_name: "Breaker"
+  display_name: "✂️ Breaker"
   short_description: "TODO"
   default_prompt: "TODO"
 policy:

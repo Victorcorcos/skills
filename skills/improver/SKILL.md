@@ -3,7 +3,7 @@ name: improver
 description: 'Review changed code on the current branch for Clean Code, security, performance, test quality, and repository/framework convention issues, then walk the user through each finding one by one with proposed fixes and interactive approval. Use when asked to improve, review and fix, or audit code quality on a branch.'
 ---
 
-# Improver
+# ✨ Improver
 
 > **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and repository/framework convention mismatches, then walk the user through each finding one by one — proposing a fix, showing the diff, and asking for approval before applying it.
 

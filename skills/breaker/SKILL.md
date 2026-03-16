@@ -3,7 +3,7 @@ name: breaker
 description: 'TODO: Analyze a large set of changes and propose how to split it into smaller, reviewable pull requests.'
 ---
 
-# Breaker
+# ✂️ Breaker
 
 > **Status**: 🚧 Under Construction
 
@@ -26,4 +26,3 @@ description: 'TODO: Analyze a large set of changes and propose how to split it i
 ## Examples
 
 <!-- TODO: Add good/bad examples -->
-

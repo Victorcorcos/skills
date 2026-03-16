@@ -1,5 +1,5 @@
 interface:
-  display_name: "Planner"
+  display_name: "🗺️ Planner"
   short_description: "Plan tasks in structured sections with human approval gates."
   default_prompt: "Investigate the codebase, plan the task in checkpoint-driven sections saved as PLAN.md, then execute section by section with approval gates."
 policy:

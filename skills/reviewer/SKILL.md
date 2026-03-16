@@ -3,7 +3,7 @@ name: reviewer
 description: 'Review changed code on the current branch for Clean Code, security, performance, test quality, and repository/framework convention issues, then walk the user through each finding one by one. Instead of applying fixes locally, post approved findings as inline PR comments (with code suggestions when applicable) on the associated GitHub pull request. Use when asked to review a PR and leave comments, or to post review feedback on GitHub.'
 ---
 
-# Reviewer
+# 🔍 Reviewer
 
 > **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and repository/framework convention mismatches, then walk the user through each finding one by one — and for each approved finding, post an inline comment on the associated GitHub pull request (with a code suggestion when applicable) instead of modifying local files.
 

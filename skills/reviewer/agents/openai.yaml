@@ -1,5 +1,5 @@
 interface:
-  display_name: "Reviewer"
+  display_name: "🔍 Reviewer"
   short_description: "Review code and tests for quality, security, performance, and conventions, then post approved PR comments."
   default_prompt: "Use this skill to review the current branch for clean code, security, performance, test quality, and convention issues, then walk me through each finding. For approved findings, post inline comments with code suggestions on the associated GitHub pull request."
 policy:
