@@ -38,15 +38,15 @@ This repository supports:
 
 ## 🧠 Skills
 
-| Skill | Command | Purpose | Status |
-|-------|---------|---------|--------|
-| 🗺️ Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 Ready |
-| ✨ Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 Ready |
-| 🧪 BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 Ready |
-| 🌍 Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 Ready |
-| ✂️ Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 Pending |
-| 🩹 Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 Ready |
-| 🔍 Reviewer | `/reviewer` | Review code and tests, then post inline PR comments with code suggestions for each approved finding | 🟢 Ready |
+|Emoji| Skill | Command | Purpose | Status |
+|-----|-------|---------|---------|--------|
+| 🗺️ | Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 |
+| ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
+| 🧪 | BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 |
+| 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
+| ✂️ | Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 |
+| 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
+| 🔍 | Reviewer | `/reviewer` | Review code and tests, then post inline PR comments with code suggestions for each approved finding | 🟢 |
 
 ---
 
