@@ -11,7 +11,24 @@ description: 'Analyze the current git diff, draft a pull request title and descr
 
 ## Step 1 — Diff Size Guard
 
-Before anything else, resolve a diff base and estimate the diff size.
+Before anything else, ensure git references are up-to-date, resolve a diff base, and estimate the diff size.
+
+### Prerequisites
+
+First, update all remote references to ensure they match the latest state:
+
+```bash
+git fetch --all --prune
+```
+
+This command:
+- Fetches updates from all remotes (`upstream` and `origin`)
+- Removes local references to deleted remote branches (`--prune`)
+- Ensures the fallback chain below finds valid, current references
+
+**Important**: Without this step, the branch resolution may fail if the local git database is stale.
+
+### Resolve the diff base
 
 **Fallback chain** for the diff base, try each in order until one succeeds:
 1. `upstream/main`

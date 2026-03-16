@@ -13,7 +13,24 @@ Here is the desired workflow of this task in detail.
 
 ## Step 1 — Resolve the Diff Base
 
-Before anything else, resolve a diff base and obtain the changed code.
+Before anything else, ensure git references are up-to-date and then resolve a diff base.
+
+### Prerequisites
+
+First, update all remote references to ensure they match the latest state:
+
+```bash
+git fetch --all --prune
+```
+
+This command:
+- Fetches updates from all remotes (`upstream` and `origin`)
+- Removes local references to deleted remote branches (`--prune`)
+- Ensures the fallback chain below finds valid, current references
+
+**Important**: Without this step, the branch resolution may fail if the local git database is stale.
+
+### Resolve the diff base
 
 **Fallback chain** for the diff base — try each in order until one succeeds:
 1. `upstream/main`

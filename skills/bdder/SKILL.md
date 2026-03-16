@@ -11,6 +11,25 @@ description: 'Analyze changed tests in the current branch and improve them using
 
 ## Step 1 — Resolve Diff Base
 
+Before resolving the diff base, ensure git references are up-to-date.
+
+### Prerequisites
+
+First, update all remote references to ensure they match the latest state:
+
+```bash
+git fetch --all --prune
+```
+
+This command:
+- Fetches updates from all remotes (`upstream` and `origin`)
+- Removes local references to deleted remote branches (`--prune`)
+- Ensures the fallback chain below finds valid, current references
+
+**Important**: Without this step, the branch resolution may fail if the local git database is stale.
+
+### Resolve the diff base
+
 Resolve the diff base using the same fallback chain as other skills:
 
 ```bash
