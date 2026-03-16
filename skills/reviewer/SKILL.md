@@ -1,11 +1,11 @@
 ---
 name: reviewer
-description: 'Review changed code on the current branch for Clean Code, security, performance, and repository/framework convention issues, then walk the user through each finding one by one. Instead of applying fixes locally, post approved findings as inline PR comments (with code suggestions when applicable) on the associated GitHub pull request. Use when asked to review a PR and leave comments, or to post review feedback on GitHub.'
+description: 'Review changed code on the current branch for Clean Code, security, performance, test quality, and repository/framework convention issues, then walk the user through each finding one by one. Instead of applying fixes locally, post approved findings as inline PR comments (with code suggestions when applicable) on the associated GitHub pull request. Use when asked to review a PR and leave comments, or to post review feedback on GitHub.'
 ---
 
 # Reviewer
 
-> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, and repository/framework convention mismatches, then walk the user through each finding one by one — and for each approved finding, post an inline comment on the associated GitHub pull request (with a code suggestion when applicable) instead of modifying local files.
+> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and repository/framework convention mismatches, then walk the user through each finding one by one — and for each approved finding, post an inline comment on the associated GitHub pull request (with a code suggestion when applicable) instead of modifying local files.
 
 Here is the desired workflow of this task in detail.
 
@@ -79,6 +79,17 @@ Then stop.
 
 Read every changed file **in full** (not just the diff hunks) to understand context. You need the surrounding code to judge whether something is truly an issue.
 
+### Read the related automated tests
+
+For every changed implementation file, locate and read the most relevant automated tests even if the tests were not changed in this branch.
+
+- Prefer the closest matching test file by name, module, or feature area
+- Read existing tests for the same feature, service, controller, model, hook, component, or endpoint
+- If the branch already changes tests, read those test files in full as first priority
+- If you cannot find any relevant tests for a changed behavior, treat that as potential `Test Quality` evidence rather than silently ignoring it
+
+You must evaluate whether the implementation is actually covered by automated tests, not just whether test files exist.
+
 ### Read repository conventions
 
 Read `README.md`, `AGENTS.md`, and `CLAUDE.md` at the repository root (if they exist). These files define the project's conventions, architecture decisions, and coding standards. You will need them for the Convention category in Step 3.
@@ -93,18 +104,30 @@ For each changed file, **read 1–3 similar files** in the same directory or mod
 
 This lets you discover the **actual patterns the codebase uses** — naming conventions, error handling style, import ordering, class structure, decorator usage, etc. — so you can flag deviations in the changed code.
 
+### Align with the repository's BDD testing standard
+
+When tests are present or should be added, apply the same core BDD expectations used by the `bdder` skill:
+
+- `describe` blocks should describe scenarios or contexts such as `when`, `with`, `after`, `while`
+- `before`-style hooks should prepare the scenario, not contain assertions
+- `it` blocks should describe outcomes and ideally start with `should`
+- Tests should prefer real user journeys and observable behavior over implementation-detail assertions
+- Mocks and stubs should be limited to external APIs, external libraries, time, hardware, filesystem, environment boundaries, or similarly unavoidable seams
+- Internal classes, methods, and collaborators should usually be exercised through real flows instead of being heavily mocked
+
 ---
 
 ## Step 3 — Analyze the Changed Code
 
-For each changed file, identify issues in **four categories**:
+For each changed file, identify issues in **five categories**:
 
 1. **Code Smell** — Clean Code violations, maintainability problems
 2. **Security** — Vulnerabilities, unsafe patterns
 3. **Performance** — Inefficiencies, resource waste
-4. **Convention** — Repository/framework alignment violations
+4. **Test Quality** — Missing, weak, brittle, over-mocked, or non-BDD automated tests
+5. **Convention** — Repository/framework alignment violations
 
-Use the reference tables below as your checklist for categories 1–3. For category 4 (Convention), use what you learned from reading `README.md`, `AGENTS.md`, `CLAUDE.md`, and sibling files in Step 2.
+Use the reference tables below as your checklist for categories 1–4. For category 5 (Convention), use what you learned from reading `README.md`, `AGENTS.md`, `CLAUDE.md`, and sibling files in Step 2.
 
 However, **the tables are just a starting point** — you can and should flag issues that go beyond what is cataloged in the tables.
 
@@ -117,6 +140,19 @@ However, **the tables are just a starting point** — you can and should flag is
 **Security**: See Table B. Look for injection risks, hardcoded credentials, broken access control, cryptographic misuse, unsafe deserialization, etc.
 
 **Performance**: See Table C. Look for N+1 queries, missing indexes, memory leaks, blocking I/O, unbounded results, excessive DOM manipulation, etc.
+
+**Test Quality**: See Table D. Inspect the implementation and its related tests together. Look for:
+- changed lines that are untested or only incidentally executed without a meaningful assertion
+- missing tests for newly introduced or materially changed behavior
+- missing happy path, failure path, branch, boundary, and common edge-case coverage
+- tests that claim coverage but only assert superficial outcomes while missing the real feature behavior
+- tests that overuse mocks/stubs for internal classes or methods, creating false confidence instead of real scenario coverage
+- tests that verify implementation details instead of user-visible or externally observable outcomes
+- tests that violate the BDD structure above and the conventions used by the repository's existing test suite
+- flaky or brittle tests caused by incidental timing, shared state, random ordering, or poor isolation
+- missing regression tests for bugs fixed by the branch
+
+Treat lack of test coverage as a first-class finding when the branch changes behavior, data flow, branching logic, error handling, or integrations in a way that should be protected by automated tests.
 
 **Convention**: No table — this is based on what you observed in the repository. Look for:
 - File naming patterns that differ from sibling files (e.g., `kebab-case.ts` where the repo uses `PascalCase.ts`, or `user_service.py` where the repo uses `userService.py`); also check pluralization/singularization (e.g., `users.ts` vs `user.ts`) and whether the file is placed in the correct folder according to the codebase's conventions and good practices (e.g., a service placed in `controllers/`, or a model placed in `utils/`)
@@ -137,7 +173,7 @@ For each issue found, record:
 | Field | Description |
 |-------|-------------|
 | **#** | Sequential number |
-| **Category** | `Code Smell`, `Security`, `Performance`, or `Convention` |
+| **Category** | `Code Smell`, `Security`, `Performance`, `Test Quality`, or `Convention` |
 | **Severity** | `Critical`, `High`, `Medium`, or `Low` |
 | **File** | File path and line number(s) |
 | **Issue** | Short description of what is wrong |
@@ -154,7 +190,8 @@ Present all findings to the user as a numbered summary table:
 | 1 | Security | Critical | src/auth.ts:42 | Hardcoded API key |
 | 2 | Code Smell | Medium | src/utils.ts:15 | Long method (87 lines) |
 | 3 | Performance | High | src/db.ts:23 | N+1 query in loop |
-| 4 | Convention | Medium | src/api.ts:8 | Uses raw SQL; repo convention is ORM |
+| 4 | Test Quality | High | spec/api_spec.rb:55 | Missing regression test for invalid token flow |
+| 5 | Convention | Medium | src/api.ts:8 | Uses raw SQL; repo convention is ORM |
 | ... | ... | ... | ... | ... |
 
 I found [N] issues. Let's walk through each one.
@@ -165,7 +202,7 @@ Sort findings by severity: Critical > High > Medium > Low.
 
 If **no issues are found**, report that clearly and stop:
 
-> "I reviewed the changes on this branch and found no code smells, security issues, performance problems, or convention mismatches. The code looks good!"
+> "I reviewed the changes on this branch and found no code smells, security issues, performance problems, test quality issues, or convention mismatches. The code looks good!"
 
 ---
 
@@ -202,6 +239,17 @@ Present exactly these three options:
 - **Yes**: Post the inline comment on the PR immediately (see "How to post comments" below). Confirm it was posted. Move to the next issue.
 - **No**: Acknowledge the skip. Do NOT post anything. Move to the next issue.
 - **Other**: Read the user's feedback. Propose a revised comment based on their input. Show the updated comment. Ask again with the same three options. Repeat until the user chooses **Yes** or **No**.
+
+### Additional rule for `Test Quality` findings
+
+When the finding is in `Test Quality`, the review comment must be specific about the missing or weak test behavior.
+
+- Prefer comments that name the exact missing scenario, branch, edge case, or regression
+- If the issue is excessive mocking, state which internal collaborator is being mocked and what real flow should be exercised instead
+- If the issue is poor BDD structure, explain how the scenario naming or setup obscures the behavior under test
+- If the fix is straightforward, include a concrete code suggestion in the test file
+- If the branch is missing tests entirely for a changed behavior, comment on the most relevant implementation line or use a general PR comment if no single line is appropriate
+- Review `Test Quality` issues flaw-by-flaw rather than collapsing several missing scenarios into one vague comment
 
 ### Between issues
 
@@ -257,7 +305,7 @@ gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
 
 ### Option B — General PR comment (fallback)
 
-Use this **only** when the issue is not tied to a specific line (e.g., a missing file, an architectural concern, a convention mismatch about folder structure).
+Use this **only** when the issue is not tied to a specific line (e.g., a missing file, an architectural concern, a convention mismatch about folder structure, or missing automated tests for a behavior with no touched test file).
 
 ```bash
 gh pr comment $PR_NUMBER --body '**[Category] [Severity]**: [Issue title]
@@ -316,7 +364,7 @@ After all issues have been addressed, present a summary:
 
 ## Reference Tables
 
-The tables below are your checklists for categories 1–3. Use them to identify issues in the analyzed code. Not every item will apply to every codebase — only flag what is **actually present** in the changed code.
+The tables below are your checklists for categories 1–4. Use them to identify issues in the analyzed code. Not every item will apply to every codebase — only flag what is **actually present** in the changed code.
 
 **Remember**: These tables are a starting point, not an exhaustive list. If you spot an issue that is not in these tables but is clearly a problem, flag it anyway.
 
@@ -435,6 +483,27 @@ The tables below are your checklists for categories 1–3. Use them to identify 
 
 ---
 
+### Table D — Test Quality Issues
+
+| Name | Why it matters | What good looks like |
+|------|----------------|----------------------|
+| **Untested Changed Lines** | A diff can look covered while the newly introduced lines are never asserted in a meaningful way. | Ensure the changed lines participate in a scenario with assertions that would fail if those lines behaved incorrectly. |
+| **Missing Tests For Changed Behavior** | New or changed behavior can regress immediately with no automated signal. | Add or update tests that exercise each meaningful behavior introduced by the diff. |
+| **Missing Happy Path Coverage** | The main user journey is unprotected, so the feature may not work at all despite passing CI. | Add a straightforward scenario proving the intended feature works end to end at the appropriate test level. |
+| **Missing Failure / Error Path Coverage** | Error handling often breaks silently and causes user-facing failures in production. | Add tests for invalid input, dependency failures, permission failures, and expected error states relevant to the diff. |
+| **Missing Branch Coverage** | Conditionals and branching logic can hide untested behavior on one side of the decision. | Cover each meaningful branch introduced or modified by the implementation. |
+| **Missing Boundary / Edge Case Coverage** | Bugs usually surface at limits such as empty, nil, zero, duplicate, max-size, or out-of-range inputs. | Add tests for the common edge cases implied by the implementation and domain. |
+| **Missing Regression Test** | A bug fix without a regression test is likely to reappear later. | Add a failing-then-passing test that captures the exact bug or previously broken scenario. |
+| **Over-Mocked Internal Behavior** | Heavy mocking of your own classes and methods creates false confidence and fragile tests that track implementation, not behavior. | Mock only real external boundaries and use real internal flows, factories, fixtures, and collaborators whenever practical. |
+| **Testing Implementation Details** | Tests become brittle and fail during harmless refactors while missing real user impact. | Assert observable outputs, state transitions, side effects, rendered UI, HTTP responses, persisted data, and domain events. |
+| **Non-BDD Structure** | Poor naming and setup structure makes tests hard to read, reason about, and maintain. | Use scenario-based `describe` blocks, `before` for setup, focused `it should` outcomes, and clear nested contexts. |
+| **Scattered Setup Inside Assertions** | Tests become noisy and each example reimplements the scenario differently. | Centralize setup in shared helpers or `before` blocks and keep `it` blocks focused on assertions. |
+| **Assertion Weakness** | Superficial assertions let incorrect behavior slip through while still producing green tests. | Assert concrete, meaningful outcomes instead of generic truthiness or call-count trivia. |
+| **Flaky / Non-Deterministic Tests** | Unstable tests erode trust in the suite and slow down delivery. | Control time, randomness, ordering, and shared state explicitly so the same inputs produce the same results. |
+| **Wrong Test Level** | Too-low-level tests miss real feature behavior; too-high-level tests can be slow and vague. | Choose the smallest level that still proves the real user scenario or business behavior changed by the diff. |
+| **Unclear Scenario Naming** | Test names stop acting as executable documentation. | Describe the scenario and outcome in plain language that another engineer can scan quickly. |
+---
+
 ## Quality Principles
 
 These principles apply throughout the review:
@@ -446,3 +515,4 @@ These principles apply throughout the review:
 - **Context-aware**: Respect existing codebase conventions. Propose fixes that match the project's style.
 - **No silent posts**: Never post a PR comment without showing the user what will be posted first.
 - **Beyond the tables**: The reference tables are a starting point. Flag any real issue you find, even if it is not listed in the tables.
+- **Test realism over line coverage theater**: Do not stop at "some lines are executed." Prefer comments that demand real feature behavior, real branches, and common edge cases with minimal internal mocking.
