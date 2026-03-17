@@ -164,15 +164,15 @@ The user can always select "Other" (automatically provided by the tool) to expla
 
 ### Handling each option
 
-- **Apply solution**: Apply the fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then commit the change (see "Committing after each fix" below). Then move to the next comment.
+- **Apply solution**: Apply the fix to the code immediately. Confirm the change was applied and show the final state of the modified code. Then commit the change and reply to the reviewer (see "Committing and replying after each fix" below). Then move to the next comment.
 
 - **Other** (user typed a custom response): Read the user's explanation. Propose a revised solution based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure. Repeat until the user picks a solution or skips.
 
 - **Skip**: Acknowledge the skip. Do not apply any change. Move to the next comment.
 
-### Committing after each fix
+### Committing and replying after each fix
 
-After every fix is applied, immediately commit **only that change** before moving on:
+After every fix is applied, immediately commit **only that change** and then reply to the reviewer comment on GitHub. This is **mandatory** — every applied fix must follow the full cycle: **fix → commit → reply**.
 
 1. Stage only the files modified by this fix.
 2. Build the commit title in this format:
@@ -181,6 +181,14 @@ After every fix is applied, immediately commit **only that change** before movin
    - `PR #<PR_NUMBER>, comment #<N> — <reviewer's feedback quoted briefly>`
    - A one-sentence explanation of the solution that was applied.
 4. Create the commit.
+5. **Immediately reply** to the reviewer's comment on GitHub using the commit hash from step 4:
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments/{comment_id}/replies" \
+  -f body="Addressed in COMMIT_HASH — [brief description of the fix]. Thanks for the feedback!"
+```
+
+Replace `COMMIT_HASH` with the actual short hash from the commit you just created (use `git rev-parse --short HEAD`). Replace `{comment_id}` with the numeric ID of the review comment being addressed. Keep the reply concise and professional.
 
 **Example commit:**
 
@@ -191,7 +199,11 @@ PR #42, comment #2 — "Magic number 3000 is unclear"
 Replaced the inline 3000 ms literal with a RETRY_DELAY_MS constant to improve readability.
 ```
 
-Do NOT squash multiple fixes into one commit. Each resolved comment gets its own commit.
+**Example reply posted to GitHub:**
+
+> Addressed in a1b2c3d — Extracted magic number into RETRY_DELAY_MS constant. Thanks for the feedback!
+
+Do NOT squash multiple fixes into one commit. Each resolved comment gets its own commit and its own reply. Do NOT defer replies to a later step — reply immediately after each commit.
 
 ### Between comments
 
@@ -201,24 +213,7 @@ After resolving or skipping a comment, transition:
 
 ---
 
-## Step 5 — Reply to Resolved Comments (Optional)
-
-After all comments have been processed, ask the user:
-
-> "Would you like me to reply to the resolved comments on GitHub to let reviewers know they've been addressed?"
-
-If the user agrees, for each comment where a fix was applied, post a reply using the commit hash from that fix:
-
-```bash
-gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments/{comment_id}/replies" \
-  -f body="Addressed in $COMMIT_HASH — [brief description of the fix]. Thanks for the feedback!"
-```
-
-Keep replies concise and professional. Do not reply to skipped comments.
-
----
-
-## Step 6 — Final Summary
+## Step 5 — Final Summary
 
 After all comments have been addressed, present a summary:
 
