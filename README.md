@@ -46,7 +46,7 @@ This repository supports:
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, reviewable units | 🟡 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
-| 🔍 | Reviewer | `/reviewer` | Review code and tests, then post inline PR comments with code suggestions for each approved finding | 🟢 |
+| 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
 
 ---
 
@@ -62,7 +62,7 @@ flowchart LR
     E -->|if small| F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
-    I[🔍 reviewer] -->|add comments| F
+    I[🔍 reviewer] -->|add comments + summary| F
     F --> H[🩹 fixer]
 
     style A fill:#2563EB,color:#fff
@@ -169,7 +169,7 @@ Use the creator skill to generate a PR title and description
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - ✂️ **Breaker** — Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
-- 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, without modifying local files.
+- 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
 
 ---
 

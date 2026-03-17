@@ -1,11 +1,11 @@
 ---
 name: reviewer
-description: 'Review changed code on the current branch for Clean Code, security, performance, test quality, and repository/framework convention issues, then walk the user through each finding one by one. Instead of applying fixes locally, post approved findings as inline PR comments (with code suggestions when applicable) on the associated GitHub pull request. Use when asked to review a PR and leave comments, or to post review feedback on GitHub.'
+description: 'Review changed code on the current branch for Clean Code, security, performance, test quality, and repository/framework convention issues, then walk the user through each finding one by one. Instead of applying fixes locally, post approved findings as inline PR comments (with code suggestions when applicable) on the associated GitHub pull request, then draft and optionally submit a PR review summary. Use when asked to review a PR and leave comments, or to post review feedback on GitHub.'
 ---
 
-# 🔍 Reviewer
+# Reviewer
 
-> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and repository/framework convention mismatches, then walk the user through each finding one by one — and for each approved finding, post an inline comment on the associated GitHub pull request (with a code suggestion when applicable) instead of modifying local files.
+> **Purpose**: Analyze the diff of the current branch against the base branch, identify Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and repository/framework convention mismatches, then walk the user through each finding one by one. For each approved finding, post an inline comment on the associated GitHub pull request (with a code suggestion when applicable) instead of modifying local files. After the walkthrough, draft a markdown review summary based only on the findings the user approved for posting, then ask whether to submit that summary to the PR as a non-blocking review or as a `request changes` review.
 
 Here is the desired workflow of this task in detail.
 
@@ -210,7 +210,7 @@ Present all findings to the user as a numbered summary table:
 | ... | ... | ... | ... | ... |
 
 I found [N] issues. Let's walk through each one.
-For approved issues, I will post inline comments on PR #[PR_NUMBER].
+For approved issues, I will post inline comments on PR #[PR_NUMBER] and then prepare a review summary from the approved findings.
 ```
 
 Sort findings by severity: Critical > High > Medium > Low.
@@ -355,7 +355,94 @@ The `line` parameter must be a line number in the **new version** of the file th
 
 ---
 
-## Step 6 — Final Report
+## Step 6 — Draft and Submit the Review Summary
+
+After the per-finding walkthrough is complete, build a markdown summary using **only** the findings that the user approved and that were actually posted to the PR. Do not include skipped findings in the PR review summary.
+
+If `X = 0` approved findings were posted, do **not** submit a review summary to GitHub. Tell the user there is nothing approved to summarize, then continue to the final terminal report in Step 7.
+
+### Build the summary body
+
+Prepare a concise, organized markdown body with this structure:
+
+```markdown
+## Review Summary
+
+I reviewed this PR and found [X] issue(s) that should be addressed before merge.
+
+### Requested Improvements
+1. **[Category] [Severity]** — `[path:line]`
+   [One-sentence description of the issue and the expected improvement.]
+2. ...
+
+### Notes
+- Inline comments were added on the relevant files with concrete details and, when appropriate, code suggestions.
+```
+
+Guidelines:
+
+- Keep the summary tightly aligned with the inline comments that were posted
+- Group or order items by severity when that improves readability
+- Mention the file path and line reference when available
+- Focus on what must improve before merge; avoid repeating long explanations already present in the inline comments
+- Keep the tone professional and review-oriented
+
+### Show the draft to the user
+
+Before posting anything, show the exact markdown summary that you plan to submit and ask the user what to do with it.
+
+Store that exact markdown in a temporary file, for example:
+
+```bash
+SUMMARY_FILE="$(mktemp)"
+```
+
+Then write the final approved markdown summary into `"$SUMMARY_FILE"` and use `--body-file` for the GitHub CLI commands below.
+
+You **MUST** use the AI tool's built-in question/prompt mechanism to present the user with selectable options.
+
+Present exactly these four options:
+
+> **Review summary for PR #[PR_NUMBER]**
+>
+> Do you want to submit this summary to the pull request?
+> 1. **Request changes** — Submit the summary as a blocking PR review with `--request-changes`
+> 2. **Comment only** — Submit the summary as a non-blocking PR review comment
+> 3. **Skip** — Do not post the summary to GitHub
+> 4. **Other** — Revise the summary or suggest a different approach
+
+### Handling each option
+
+- **Request changes**: Submit the review summary with:
+
+```bash
+gh pr review "$PR_NUMBER" --request-changes --body-file "$SUMMARY_FILE"
+```
+
+This action must happen **only after the user explicitly chooses this option**.
+
+- **Comment only**: Submit the same summary without rejecting the PR:
+
+```bash
+gh pr review "$PR_NUMBER" --comment --body-file "$SUMMARY_FILE"
+```
+
+Use this when the user wants the summary posted to the PR but does not want to block the PR.
+
+- **Skip**: Do not post the summary to GitHub. Continue to the final terminal report.
+
+- **Other**: Read the user's feedback, revise the summary, show the updated markdown, and ask again with the same four options. Repeat until the user chooses **Request changes**, **Comment only**, or **Skip**.
+
+### Important rules
+
+- Never submit `gh pr review ... --request-changes` without explicit user approval in the current session
+- The PR review summary must reflect only the comments the user approved for posting
+- If some approved findings are minor but the user still chooses **Request changes**, follow the user's decision
+- If the user chooses **Comment only**, still present the same organized summary in the PR so the findings are captured outside the terminal
+
+---
+
+## Step 7 — Final Report
 
 After all issues have been addressed, present a summary:
 
@@ -373,6 +460,8 @@ After all issues have been addressed, present a summary:
 - Total issues found: [M]
 - Comments posted: [X]
 - Skipped: [Y]
+- Summary posted to PR: [Yes/No]
+- Summary review mode: [Request changes / Comment only / Not posted]
 ```
 
 ---
