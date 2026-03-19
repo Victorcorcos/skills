@@ -9,6 +9,24 @@ description: 'Analyze changed tests in the current branch and improve them using
 
 ---
 
+## Testing Guidelines
+
+### Philosophy
+
+User-centric testing principles ensure all tests are meaningful from the user's perspective.
+
+Tests must simulate **user journeys or user scenarios** — sequences of actions a real user would perform — rather than testing individual methods or internal class behavior in isolation.
+
+### Structure
+
+Tests must prioritize clarity, consistency, and maintainability. Write tests for people to read, not machines to execute.
+
+### Real-world Testing
+
+Favor real-world interactions over mocks and stubs. **Avoid mocking our own classes and methods.** Internal code paths must be exercised for real; only mock at the true system boundary (external HTTP APIs, hardware, environment).
+
+---
+
 ## Step 1 — Resolve Diff Base
 
 Before resolving the diff base, ensure git references are up-to-date.
@@ -70,7 +88,7 @@ For each changed test file, analyze:
 1. **Structure**: Are tests grouped by scenario or by function? Are nested contexts used?
 2. **Naming**: Do `describe` blocks describe *scenarios*? Do `it` blocks describe *outcomes*?
 3. **Setup**: Is setup scattered inside `it` blocks, or cleanly isolated in `before` (or `beforeAll`, `before(:all)`, etc) blocks? Read "Step 4 — Apply BDD Structure".
-4. **Realism**: Are mocks/stubs used where real interactions are possible? Read "Step 5 — Eliminate Mocks and Stubs".
+4. **Realism**: Do tests simulate user journeys and real interactions rather than mocking our own classes/methods? Read "Step 5 — Eliminate Mocks and Stubs".
 5. **Clarity**: Can a non-author read the test and understand what it covers while following the blocks? Read "Step 6 — Improve Test Quality"
 6. **Coverage**: Are happy paths covered? Edge cases? Failure paths? Error states?
 7. **Assertions**: Are assertions meaningful and minimal (one concern per `it`)?
@@ -143,6 +161,8 @@ end
 ## Step 5 — Eliminate Mocks and Stubs
 
 Favor real-world interactions over mocks and stubs wherever possible.
+
+**Never mock our own classes or methods.** Internal implementations must be exercised for real so that tests reflect genuine user journeys rather than artificial call chains. Mocking internal code hides bugs and makes tests brittle when implementation details change.
 
 **Remove or replace:**
 - Mocked method calls that could use actual implementations
