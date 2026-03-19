@@ -248,6 +248,20 @@ After all comments have been addressed, present a summary:
 
 ---
 
+## Step 6 — Push Commits To Remote
+
+After Step 5, run this command as a mandatory final step:
+
+```bash
+git push origin HEAD
+```
+
+This ensures every commit hash referenced in reviewer replies exists on the PR branch remote and all commit links are valid.
+
+If push fails, report the exact error and stop to let the user decide how to proceed.
+
+---
+
 ## Quality Principles
 
 These principles apply throughout the workflow:
