@@ -11,6 +11,14 @@ Here is the desired workflow of this task in detail.
 
 ---
 
+## Non-Negotiables
+
+- **One issue at a time**: NEVER fix multiple issues in a single step. Each finding must be presented, discussed, and resolved individually before moving to the next.
+- **Always use `AskUserQuestion` tool**: When asking the user whether to apply a fix, you MUST use the `AskUserQuestion` tool with structured options. Do NOT present options as plain text and wait for a freeform response.
+- **No code changes before approval**: Do NOT apply any fix until the user has explicitly selected an option via the `AskUserQuestion` tool response.
+
+---
+
 ## Step 1 — Resolve the Diff Base
 
 Before anything else, ensure git references are up-to-date and then resolve a diff base.
@@ -209,22 +217,27 @@ Process each finding **one at a time** in the following cycle:
 └──────────────────────────────────────────────────────┘
 ```
 
-### Decision prompt
+### Decision prompt — MUST use AskUserQuestion tool
 
-After showing the proposed fix, ask the user:
+After showing the proposed fix, you **MUST** use the `AskUserQuestion` tool to collect the user's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
 
-> **Issue #N — [Short description]**
->
-> Do you want to apply this fix?
-> 1. **Yes** — Apply the fix and move to the next issue
-> 2. **No** — Skip this issue and move to the next one
-> 3. **Other** — Explain your concern or suggest a different approach
+Always use these two options:
+
+1. `label: "Apply fix"`, `description: "[one-line description of the fix]"`
+2. `label: "Skip"`, `description: "Move to the next issue without changes"`
+
+The question text must follow this format:
+> `"Issue #N — [Short description]: apply this fix?"`
+
+Set `header` to `"Issue #N"` and `multiSelect` to `false`.
+
+The user can always select "Other" (automatically provided by the tool) to explain what they want instead.
 
 ### Handling each option
 
-- **Yes**: Apply the fix to the code immediately. Confirm it was applied and move to the next issue.
-- **No**: Acknowledge the skip and move to the next issue. Do not apply any change.
-- **Other**: Read the user's feedback. Propose a revised fix based on their input. Show the updated diff. Ask again with the same three options. Repeat this conversation until the user chooses **Yes** or **No**.
+- **Apply fix**: Apply the fix to the code immediately. Confirm it was applied and move to the next issue.
+- **Skip**: Acknowledge the skip and move to the next issue. Do not apply any change.
+- **Other** (user typed a custom response): Read the user's explanation. Propose a revised fix based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure. Repeat until the user picks a solution or skips.
 
 ### Additional rule for `Test Quality` findings
 
