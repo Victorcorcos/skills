@@ -65,20 +65,95 @@ Group changes by **responsibility**, not by file order or directory. Each group 
 
 #### 3. Draft a split plan and present it to the developer
 
-Before creating any branch, present the proposed split as a numbered list:
+Before creating any branch, compute the precise added/subtracted lines for each proposed child PR and present the plan:
 
 ```
-Split plan for <branch-name> (TOTAL lines):
+Split plan for <branch-name>
 
-  PR 1 — "<short description>" (~NNN lines)
+  Mother branch: +AAA -SSS (TOTAL lines)
+
+  PR 1 — "<short description>"
          Files: ...
-  PR 2 — "<short description>" (~NNN lines)
+         +aaa -sss
+  PR 2 — "<short description>"
          Files: ...
-  ...
-  Total: TOTAL lines (must match mother branch)
+         +bbb -sss
+  PR 3 — "<short description>"
+         Files: ...
+         +ccc -sss
+
+  Integrity check:
+
+           Added  Subtracted
+  PR 1      +aaa        -sss
+  PR 2      +bbb        -sss
+  PR 3      +ccc        -sss
+  ────────────────────────────
+  Total     +AAA        -SSS  ← must match mother branch
 ```
 
-**Wait for the developer to approve or adjust the plan before proceeding.**
+#### Plan approval — MUST use AskUserQuestion tool
+
+After presenting the split plan, you **MUST** use the `AskUserQuestion` tool to collect the developer's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
+
+Always use these two options:
+
+1. `label: "Approve"`, `description: "The split plan looks good. Proceed with creating branches and PRs."`
+2. `label: "Reject"`, `description: "The plan needs changes. I'll explain what to adjust."`
+
+The question text must follow this format:
+> `"Split plan for <branch-name> (N PRs, TOTAL lines): approve or reject?"`
+
+Set `header` to `"Breaker Plan"` and `multiSelect` to `false`.
+
+#### Handling each option
+
+- **Approve**: Proceed to step 3.1 (save `BREAKER_PLAN.md`) and continue the workflow.
+
+- **Reject** (user typed a custom response via "Other"): Read the developer's explanation of why the plan was rejected. Revise the split plan according to their feedback — adjust boundaries, move files between PRs, merge or split groups, etc. Present the updated plan and ask again with the `AskUserQuestion` tool using the same structure. **Repeat this cycle until the developer approves.**
+
+- **Other** (user typed a custom response): Treat the same as Reject — read their input, revise, and re-present.
+
+**CRITICAL — Do NOT create any branch or write `BREAKER_PLAN.md` until the developer explicitly selects "Approve".**
+
+#### 3.1. Save the approved plan to `BREAKER_PLAN.md`
+
+Once the developer approves, save the split plan to a file named `BREAKER_PLAN.md` in the repository root. This file is the source of truth for the ongoing split process. It must contain:
+
+- The mother branch name and its total `+added -subtracted` lines
+- Each child PR with its description, files, branch name, and precise `+added -subtracted` lines
+- The integrity table proving the sum of children matches the mother
+- A status column to track progress (`pending` / `done`)
+
+Example:
+
+```markdown
+# Breaker Plan
+
+Mother branch: `feature/digit-3121-offline-maps` (+512 -1000)
+
+## Child PRs
+
+| #  | Branch | Description | +Added | -Subtracted | Status |
+|----|--------|-------------|--------|-------------|--------|
+| 1  | `digit3121_offline_maps.add_backend` | Add backend layer with persistence, model and controller | +412 | -500 | pending |
+| 2  | `digit3121_offline_maps.add_frontend` | Add frontend layer with design, layout and proper API requests | +100 | -250 | pending |
+| 3  | `digit3121_offline_maps.improver_usability` | Improve the usability of related files, following Boy Scout Rule | +0 | -250 | pending |
+
+## Integrity
+
+|           |  Added   | Subtracted |
+|-----------|----------|------------|
+| Backend   |  +412    |    -500    |
+| Frontend  |  +100    |    -250    |
+| Usability |    +0    |    -250    |
+-------------------------------------
+| Total     |  +512    |    -1000   |
+| Mother    |  +512    |    -1000   |
+| Match     |  yes     |     yes    |
+```
+
+Use `BREAKER_PLAN.md` throughout the rest of the workflow to track which child PRs have been created and opened. Update the `Status` column to `done` as each child PR is opened.
 
 #### 4. Rules for each child PR
 
@@ -90,41 +165,39 @@ Split plan for <branch-name> (TOTAL lines):
 
 #### 5. Integrity verification (mandatory)
 
-After splitting, verify that the union of all child branches reproduces **exactly** the same changes as the mother branch. Run this check:
+After creating all child branches, verify that the actual line counts match the plan in `BREAKER_PLAN.md`. For each child branch, run:
 
 ```bash
-# Count lines in the mother branch
-MOTHER_LINES=$(git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}')
-
-# Count lines across all child branches (sum each child's diff against $BASE_REF)
-CHILDREN_LINES=0
-for branch in <child-branch-1> <child-branch-2> <child-branch-3>; do  # adjust branch names
-  CHILD=$(git diff $(git merge-base "$branch" "$BASE_REF").."$branch" --numstat | awk '{a+=$1;d+=$2} END{print a+d}')
-  CHILDREN_LINES=$((CHILDREN_LINES + CHILD))
-done
-
-echo "Mother: $MOTHER_LINES | Children total: $CHILDREN_LINES"
+git diff $(git merge-base "$CHILD_BRANCH" "$BASE_REF").."$CHILD_BRANCH" --numstat | awk '{a+=$1;d+=$2} END{print "+"a, "-"d}'
 ```
 
-- If `CHILDREN_LINES == MOTHER_LINES` → the split is correct
+Then verify:
+
+1. Each child's actual `+added -subtracted` matches the value in `BREAKER_PLAN.md`
+2. The sum of all children's `+added` equals the mother's `+added`
+3. The sum of all children's `-subtracted` equals the mother's `-subtracted`
+
+- If both sums match → the split is correct
 - If they differ → the split is **wrong**. Investigate which changes were lost or duplicated and fix before opening any PR
 - **No changes may be added or removed during the split** — the children must be a perfect partition of the mother
+
+Update `BREAKER_PLAN.md` with the actual verified counts if they differ from the estimates.
 
 #### 6. Branch naming
 
 Use descriptive names that reflect each PR's responsibility:
 
 ```
-<original-branch>/split-add-user-model
-<original-branch>/split-user-service
-<original-branch>/split-user-ui
+<original-branch>.add_backend
+<original-branch>.add_frontend
+<original-branch>.improver_usability
 ```
 
 ---
 
 ## PR Title
 
-- Format: `[CI SKIP] PREFIX-XXXX <plain-language summary>` — e.g. `[CI SKIP] DIGIT-3121 Add offline support for map view` or `[CI SKIP] DPMS-42 Fix session timeout`
+- Format: `PREFIX-XXXX <plain-language summary>` — e.g. `DIGIT-3121 Add offline support for map view` or `DPMS-42 Fix session timeout`
 - Extract the ticket number from the branch name (see **Ticket number** section below) before writing the title
 - Title must be a short, plain-language summary of the change (no conventional commits style required)
 
@@ -151,11 +224,15 @@ cat > /tmp/pr_body.md << 'ENDBODY'
 ...
 ENDBODY
 
+GH_USER=$(gh api user --jq '.login')
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+BRANCH=$(git branch --show-current)
+
 gh pr create \
-  --repo oxeanbits/digitalize-front \
+  --repo "$REPO" \
   --base "$(echo "$BASE_REF" | sed 's|.*/||')" \
-  --head tiagogoncalves:branch-name \
-  --title "[CI SKIP] PREFIX-XXXX Summary" \
+  --head "$GH_USER:$BRANCH" \
+  --title "PREFIX-XXXX Summary" \
   --body-file /tmp/pr_body.md
 ```
 
@@ -163,35 +240,58 @@ gh pr create \
 
 ## PR Template
 
-Use `.github/pull_request_template.md` as the base and fill each section following the rules below.
-The Plane Ticket section is always the **last** section of the description — omit it entirely when no ticket number is available.
+Use the PR template from the current project first:
+
+`.github/pull_request_template.md`
+
+If that file does not exist, fall back to the shared template that ships with this skills pack. Prefer this lookup order:
+
+1. `$SKILLS_PATH/skills/breaker/references/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
+2. `~/.codex/skills/breaker/references/pull_request_template.md` (common for Codex CLI installs)
+3. `skills/breaker/references/pull_request_template.md` (when working inside this skills repository)
+
+Fill in every section of the template. The Ticket section is always the **last** section — omit it entirely when no ticket number is available.
 
 ### Description ✍️
 
 - Plain language, no jargon — written for QA and PO
-- Use a `> [!NOTE]` alert to highlight the core problem being solved
+- Use a `> [!NOTE]` alert to highlight the core task being done (the user story being implemented, or the problem being solved, or the refactor being implemented, etc)
+- Also explain why this step is required and what it brings to the system (the pull request value)
 - If the change has a visible user impact, state it in one sentence
 
 ### Overview 🔍
 
-- Leave a `<details>` collapsible placeholder for screenshots/GIFs with a `| Before | After |` table — the developer fills these in, the agent cannot capture UI
-- If the diff contains flow or architecture changes (new Redux actions, navigation paths, service calls, state transitions), **generate** a `mermaid` diagram inside a `<details>` block derived from the code:
+- If the feature has an UI change in the system, leave a `<details>` collapsible placeholder for screenshots/GIFs with a `| Before | After |` table — the developer fills these in, the agent cannot capture UI
+- If the feature does not have a UI change, **generate** a `mermaid` diagram inside a `<details>` block derived from the code that illustrates the flow of the feature being implemented or the architecture changes:
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[User taps button] --> B[Action dispatched] --> C[State updated] --> D[UI re-renders]
+
+    style A fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    style B fill:#e9d5ff,stroke:#7c3aed,stroke-width:2px,color:#4c1d95
+    style C fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+    style D fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e
 ```
 
-- Use fenced code blocks with language tags for any inline code snippets (e.g. ` ```dart `)
+- Another possibility is to make a markdown table for the feature, displaying what the PR is implemented in an easier way to understand
 - Use `> [!WARNING]` for known limitations or risks reviewers must be aware of
+- Enhance clarity with markdown features: code fences with language tags, tables, blockquotes, GitHub alert admonitions, mermaid diagrams, `<details>` blocks, etc.
 
-### How to Test 🧪
+### Test Guidance 🦮
 
-Write numbered, step-by-step smoke test instructions derived from the diff:
-- Each step must be actionable: *navigate to X*, *tap Y*, *verify Z*
-- Add an **Expected result** line after steps that are non-obvious
-- Use `> [!IMPORTANT]` before the list to signal reviewers to follow carefully
-- Cover both happy path and at least one edge/failure case visible in the diff
+Assume a tester (not the developer) will validate this PR. Write numbered step-by-step checks that include:
+
+- **Preconditions**: Setup, test data, or permissions required before testing
+- **Concrete actions**: Reference specific pages, endpoints, buttons, or CLI commands the tester should interact with
+- **Expected results**: State what the tester should observe after each action (e.g. "The toast shows 'Payment saved'", "The API returns 200 with `{ status: 'ok' }`")
+- **Happy path first**, then edge cases (e.g. invalid input, empty state, unauthorized access)
+- **Regression checks**: If the change touches shared code, note areas that should still work as before
+
+### Ticket 🎫
+
+- If `TICKET` was resolved, add a link: `[TICKET](link/to/TICKET)` (following the `pull_request_template.md` ticket guidance and the extract ticket title and code)
+- If no ticket was resolved, remove this section entirely — do **not** write any placeholder text
 
 ---
 
@@ -225,23 +325,3 @@ For split PRs, also verify integrity:
 
 - [ ] ACK: sum of all child PR lines == mother branch lines — if NAK, changes were lost or duplicated during the split
 - [ ] ACK: every child PR is independent, self-sufficient, and within MAX lines
-
-Review the full diff against every rule defined in:
-
-- `docs/agents/styling.md` — style constants, prohibited inline usages
-- `docs/agents/structure.md` — naming, directory placement, import order
-- `docs/agents/workflow.md` — test coverage, lint, formatting commands
-- `docs/agents/testing.md` — test patterns, naming, mock usage
-
-### BDD compliance
-
-Before opening the PR, verify:
-
-- [ ] Test file exists and was created before the implementation
-- [ ] Every `test()` name describes an observable behavior, not a method or return value
-- [ ] Each scenario has a corresponding `group` context (e.g. `when X is dispatched`, `when user has no profile picture`)
-- [ ] No test asserts on implementation details (internal method calls, private state)
-- [ ] `MockData` factory used for model construction — no inline `Record(...)` / `User(...)` scattered across the file
-- [ ] 100% coverage on all modified classes confirmed by running `flutter test`
-
-Fix any violation found before opening the PR.
