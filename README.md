@@ -167,7 +167,7 @@ Use the creator skill to generate a PR title and description
 - ✨ **Improver** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
 - 🧪 **BDDer** — Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
-- ✂️ **Breaker** — Analyzes a large PR and proposes a plan to split it into smaller, independently reviewable pull requests.
+- ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle — each PR is self-sufficient with its own implementation and tests, and the sum of all child PRs must exactly match the original diff.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
 - 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
 

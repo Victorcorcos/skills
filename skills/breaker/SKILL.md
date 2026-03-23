@@ -1,11 +1,21 @@
 ---
 name: breaker
-description: 'Open a pull request following the full PR workflow: resolve the base branch, check size limits (split into chained branches if over 900 lines), handle uncommitted changes, build the PR description from the template, run the pre-submit checklist, and open the PR with gh pr create. Use when asked to open a PR, create a pull request, or submit work for review.'
+description: 'Open a pull request following the full PR workflow: resolve the base branch, check size limits (split into independent SRP-based branches if over the MAX limit), handle uncommitted changes, build the PR description from the template, run the pre-submit checklist, and open the PR with gh pr create. Use when asked to open a PR, create a pull request, or submit work for review.'
 ---
 
 # ✂️ Breaker
 
-> **Purpose**: Guide the full PR lifecycle — from resolving the base branch and checking size limits, through writing the PR description, to opening the PR with `gh pr create`. Splits oversized diffs into chained branches before doing anything else.
+> **Purpose**: Guide the full PR lifecycle — from resolving the base branch and checking size limits, through writing the PR description, to opening the PR with `gh pr create`. Splits oversized diffs into independent, SRP-based branches before doing anything else.
+
+---
+
+## Input
+
+| Parameter | Required | Default |                                                  Description                                                  |
+|-----------|----------|---------|---------------------------------------------------------------------------------------------------------------|
+|   `MAX`   |    No    |  `900`  | Maximum lines permitted per PR (including tests). Pass as the first argument: `/breaker 900`, `$breaker 900`. |
+
+If the user provides an integer argument, use it as `MAX`. Otherwise default to **900**.
 
 ---
 
@@ -29,13 +39,86 @@ Store `BASE_REF` and use it throughout (size checks, diffs, PR `--base` flag).
 
 ## Size limit
 
-- Max **900 lines per PR** (including tests) — verified by running `sh scripts/check-pr-size.sh` (or `git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}'`)
-- **Check this before doing anything else.** If the total exceeds 900, split using chained branches before writing the PR description:
-  1. `feature/part-1` from `$BASE_REF` → PR to `$BASE_REF`
-  2. `feature/part-2` from `feature/part-1` → PR to `$BASE_REF`
-  3. Repeat as needed
-- Each chained branch **must contain all code from every predecessor branch** — `part-2` has `part-1`+`part-2` code, `part-3` has `part-1`+`part-2`+`part-3` code, and so on
-- **All PRs in a chain ALWAYS target `$BASE_REF` directly** — never the previous branch. The diff for each PR grows as the chain extends; as earlier PRs are merged, the diff for remaining PRs shrinks automatically
+- Max **MAX lines per PR** (including tests) — verified by running `git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}'`
+- **Check this before doing anything else.** If the total exceeds MAX, split into independent PRs following the SRP workflow below
+
+### SRP split workflow
+
+> **This is the most critical part of the breaker skill. Follow it rigorously.**
+
+When the diff exceeds MAX lines, do **not** create dependent/chained branches. Instead, split the work into **independent, self-sufficient PRs** following the Single Responsibility Principle:
+
+#### 1. Analyze the mother branch
+
+Read every changed file in the diff. Understand the full scope of work — models, services, UI, tests, configs, migrations, etc.
+
+#### 2. Identify semantic boundaries
+
+Group changes by **responsibility**, not by file order or directory. Each group must represent a single, coherent purpose. Good boundaries include:
+
+- A new model/entity + its tests
+- A service/use-case + its tests
+- A UI component/screen + its tests
+- A refactor that enables the feature (extract, rename, restructure) + its tests
+- A migration or config change + its tests
+- An integration layer (API calls, state management) + its tests
+
+#### 3. Draft a split plan and present it to the developer
+
+Before creating any branch, present the proposed split as a numbered list:
+
+```
+Split plan for <branch-name> (TOTAL lines):
+
+  PR 1 — "<short description>" (~NNN lines)
+         Files: ...
+  PR 2 — "<short description>" (~NNN lines)
+         Files: ...
+  ...
+  Total: TOTAL lines (must match mother branch)
+```
+
+**Wait for the developer to approve or adjust the plan before proceeding.**
+
+#### 4. Rules for each child PR
+
+- **Independent**: every PR must build, pass tests, and be mergeable on its own — no PR depends on another PR in the split
+- **Self-sufficient**: each PR contains both the implementation **and** all related automated tests for that implementation
+- **Single responsibility**: each PR has one clear purpose described in its title
+- **All target `$BASE_REF`**: every child branch is created from `$BASE_REF` and its PR targets `$BASE_REF`
+- **Within MAX**: every child PR must be ≤ MAX lines
+
+#### 5. Integrity verification (mandatory)
+
+After splitting, verify that the union of all child branches reproduces **exactly** the same changes as the mother branch. Run this check:
+
+```bash
+# Count lines in the mother branch
+MOTHER_LINES=$(git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}')
+
+# Count lines across all child branches (sum each child's diff against $BASE_REF)
+CHILDREN_LINES=0
+for branch in <child-branch-1> <child-branch-2> <child-branch-3>; do  # adjust branch names
+  CHILD=$(git diff $(git merge-base "$branch" "$BASE_REF").."$branch" --numstat | awk '{a+=$1;d+=$2} END{print a+d}')
+  CHILDREN_LINES=$((CHILDREN_LINES + CHILD))
+done
+
+echo "Mother: $MOTHER_LINES | Children total: $CHILDREN_LINES"
+```
+
+- If `CHILDREN_LINES == MOTHER_LINES` → the split is correct
+- If they differ → the split is **wrong**. Investigate which changes were lost or duplicated and fix before opening any PR
+- **No changes may be added or removed during the split** — the children must be a perfect partition of the mother
+
+#### 6. Branch naming
+
+Use descriptive names that reflect each PR's responsibility:
+
+```
+<original-branch>/split-add-user-model
+<original-branch>/split-user-service
+<original-branch>/split-user-ui
+```
 
 ---
 
@@ -133,18 +216,15 @@ Never assume all uncommitted changes belong to the current PR — the developer 
 ### Size gate
 
 ```sh
-sh scripts/check-pr-size.sh
+git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}'
 ```
 
-- [ ] ACK: single PR is within 900 lines — if NAK, stop and split into chained branches first
+- [ ] ACK: PR is within MAX lines — if NAK, stop and run the SRP split workflow first
 
-For chained PRs, also run the cumulative check against the tip of the last branch to confirm the split did not simply reproduce the original oversized diff:
+For split PRs, also verify integrity:
 
-```sh
-sh scripts/check-pr-size.sh --chain <tip-branch>
-```
-
-- [ ] ACK: cumulative total is within chain limit — if NAK, the split is too large and must be re-evaluated
+- [ ] ACK: sum of all child PR lines == mother branch lines — if NAK, changes were lost or duplicated during the split
+- [ ] ACK: every child PR is independent, self-sufficient, and within MAX lines
 
 Review the full diff against every rule defined in:
 
