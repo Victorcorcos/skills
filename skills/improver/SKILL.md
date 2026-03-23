@@ -14,7 +14,8 @@ Here is the desired workflow of this task in detail.
 ## Non-Negotiables
 
 - **One issue at a time**: NEVER fix multiple issues in a single step. Each finding must be presented, discussed, and resolved individually before moving to the next.
-- **Always use `AskUserQuestion` tool**: When asking the user whether to apply a fix, you MUST use the `AskUserQuestion` tool with structured options. Do NOT present options as plain text and wait for a freeform response.
+- **Always use the native selectable question tool**: When asking the user whether to apply a fix, you MUST use `AskUserQuestion` or the provider's equivalent structured question tool with selectable options. Do NOT present options as plain text and wait for a freeform response.
+- **Never require typed `Yes` / `No` / `Other` responses**: The approval step must render as keyboard-selectable choices so the user can move with arrow keys and confirm with Enter. Do not ask the user to type the option labels manually.
 - **No code changes before approval**: Do NOT apply any fix until the user has explicitly selected an option via the `AskUserQuestion` tool response.
 
 ---
@@ -217,6 +218,23 @@ Process each finding **one at a time** in the following cycle:
 └──────────────────────────────────────────────────────┘
 ```
 
+**CRITICAL — This is the most important step. You MUST follow it exactly.**
+
+- Do NOT batch-apply fixes or attempt to fix multiple findings at once.
+- Do NOT proceed to the next finding until the user has made a decision on the current one.
+- Do NOT skip presenting the proposed fix or the structured decision prompt for any finding.
+- Do NOT apply any code change before receiving the user's explicit choice from the selectable question tool.
+- After invoking the structured question tool, stop and wait. Do NOT restate the options as plain text.
+
+For each finding, follow this exact sequence:
+
+1. Announce: "Issue #N of M — [Category] [Severity]"
+2. Show the current code in question
+3. Explain why the finding is valid and why it matters
+4. Present the proposed fix with its code diff
+5. Ask the user for their decision using `AskUserQuestion` or the provider-equivalent selectable question tool
+6. Wait for the user's response before doing anything else
+
 ### Decision prompt — MUST use AskUserQuestion tool
 
 After showing the proposed fix, you **MUST** use the `AskUserQuestion` tool to collect the user's decision. Do NOT simply print the options as text and wait — you MUST invoke the tool.
@@ -231,13 +249,15 @@ The question text must follow this format:
 
 Set `header` to `"Issue #N"` and `multiSelect` to `false`.
 
-The user can always select "Other" (automatically provided by the tool) to explain what they want instead.
+Do NOT add a manual `"Other"` option. The structured question tool should provide its built-in `Other` path automatically so the user can type custom feedback for that specific issue.
+
+The user can always select `Other` (automatically provided by the tool) to explain what they want instead. Treat that typed response as scoped to the current finding only.
 
 ### Handling each option
 
 - **Apply fix**: Apply the fix to the code immediately. Confirm it was applied and move to the next issue.
 - **Skip**: Acknowledge the skip and move to the next issue. Do not apply any change.
-- **Other** (user typed a custom response): Read the user's explanation. Propose a revised fix based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure. Repeat until the user picks a solution or skips.
+- **Other** (user typed a custom response): Read the user's issue-specific explanation. Propose a revised fix based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure so the user can choose with the keyboard or type a refined custom response. Repeat until the user picks a solution or skips.
 
 ### Additional rule for `Test Quality` findings
 
