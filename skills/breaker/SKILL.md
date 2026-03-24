@@ -19,6 +19,49 @@ If the user provides an integer argument, use it as `MAX`. Otherwise default to 
 
 ---
 
+## Prerequisites
+
+Before doing anything else, verify that the required tools are installed.
+
+### branchlet
+
+`branchlet` is **required** to run this skill. It manages git worktrees in an organized sibling directory structure with support for copy/ignore patterns (e.g. ENV files).
+
+```bash
+command -v branchlet >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+```
+
+If `branchlet` is **MISSING**, stop immediately and ask the developer:
+
+> "`branchlet` is not installed. It is required by the breaker skill to create organized worktrees for each child PR. Would you like me to install it now?"
+
+Use the `AskUserQuestion` tool with:
+
+1. `label: "Install branchlet"`, `description: "Run npm install -g branchlet and continue"`
+2. `label: "Cancel"`, `description: "Stop the breaker skill without making any changes"`
+
+Set `header` to `"Missing dependency"` and `multiSelect` to `false`.
+
+- **Install branchlet**: Run `npm install -g branchlet`, then verify the installation succeeded:
+
+```bash
+command -v branchlet >/dev/null 2>&1 && echo "OK" || echo "FAILED"
+```
+
+If `OK`, restart the skill from the beginning. If `FAILED`, report the error and stop.
+
+- **Cancel**: Stop the skill entirely.
+
+### gh (GitHub CLI)
+
+```bash
+command -v gh >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+```
+
+If `gh` is missing or not authenticated, tell the developer and stop.
+
+---
+
 ## Resolve the base branch
 
 Before doing anything else, fetch remote refs and resolve the base:
@@ -155,20 +198,83 @@ Mother branch: `feature/digit-3121-offline-maps` (+512 -1000)
 
 Use `BREAKER_PLAN.md` throughout the rest of the workflow to track which child PRs have been created and opened. Update the `Status` column to `done` as each child PR is opened.
 
-#### 4. Rules for each child PR
+#### 4. Create worktrees with branchlet
+
+**Use `branchlet` to create worktrees instead of switching branches.** Each child gets its own working directory with ENV files properly copied — no `git checkout`, no stashing, no risk of cross-contamination.
+
+##### Worktree directory structure
+
+`branchlet` creates worktrees in a sibling directory named `{{DIRECTORY_NAME}}.worktree/`. Each worktree inside is named after its branch.
+
+Example — if the skill is invoked inside `/status-survey` with three child branches:
+
+```
+/status-survey/                                                    ← mother branch (untouched)
+/status-survey.worktree/digit3121_offline_maps.add_backend/        ← child worktree 1
+/status-survey.worktree/digit3121_offline_maps.add_frontend/       ← child worktree 2
+/status-survey.worktree/digit3121_offline_maps.improver_usability/ ← child worktree 3
+```
+
+##### Create each worktree
+
+For each child PR in `BREAKER_PLAN.md`, resolve the base branch short name and run these 4 steps:
+
+```bash
+REPO_DIR="$(pwd)"
+REPO_NAME="$(basename "$REPO_DIR")"
+BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master"
+CHILD_BRANCH="digit3121_offline_maps.add_backend"  # adjust per child
+
+# 1. Create the worktree from the base branch
+branchlet create -n "$CHILD_BRANCH" -s "$BASE_SHORT"
+
+# 2. Enter the worktree
+cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
+
+# 3. Create and switch to the child branch (frees the base branch)
+git switch -c "$CHILD_BRANCH"
+
+# 4. Return to the mother directory
+cd "$REPO_DIR"
+```
+
+These 4 steps are **mandatory for every child worktree**. Step 3 is critical — it associates the worktree with its own branch instead of leaving it on the base branch.
+
+##### Populate each worktree
+
+For each child, copy only the files assigned to that PR from the mother branch into the corresponding worktree directory. Then commit inside the worktree:
+
+```bash
+cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
+# copy/apply the relevant changes from the mother branch
+git add -A
+git commit -m "PREFIX-XXXX <short description of this child PR>"
+cd "$REPO_DIR"
+```
+
+**CRITICAL — The mother branch directory must remain untouched.** Never modify files in the mother directory during the split. All changes happen inside worktree directories.
+
+##### Keep worktrees alive
+
+Do **not** remove worktrees after opening PRs. The developer will continue working in these worktree directories to address review feedback, push fixes, and iterate until the PRs are merged. Each worktree is the active working directory for its child PR throughout the entire PR lifecycle.
+
+#### 5. Rules for each child PR
 
 - **Independent**: every PR must build, pass tests, and be mergeable on its own — no PR depends on another PR in the split
 - **Self-sufficient**: each PR contains both the implementation **and** all related automated tests for that implementation
 - **Single responsibility**: each PR has one clear purpose described in its title
 - **All target `$BASE_REF`**: every child branch is created from `$BASE_REF` and its PR targets `$BASE_REF`
 - **Within MAX**: every child PR must be ≤ MAX lines
+- **Isolated worktree**: each child lives in its own worktree directory — never switch branches in the mother directory
 
-#### 5. Integrity verification (mandatory)
+#### 6. Integrity verification (mandatory)
 
-After creating all child branches, verify that the actual line counts match the plan in `BREAKER_PLAN.md`. For each child branch, run:
+After populating all worktrees, verify that the actual line counts match the plan in `BREAKER_PLAN.md`. For each child worktree, run:
 
 ```bash
-git diff $(git merge-base "$CHILD_BRANCH" "$BASE_REF").."$CHILD_BRANCH" --numstat | awk '{a+=$1;d+=$2} END{print "+"a, "-"d}'
+cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
+git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print "+"a, "-"d}'
+cd "$REPO_DIR"
 ```
 
 Then verify:
@@ -183,14 +289,14 @@ Then verify:
 
 Update `BREAKER_PLAN.md` with the actual verified counts if they differ from the estimates.
 
-#### 6. Branch naming
+#### 7. Branch naming
 
-Use descriptive names that reflect each PR's responsibility:
+Use descriptive names that reflect each PR's responsibility. The branch name doubles as the worktree directory name:
 
 ```
-<original-branch>.add_backend
-<original-branch>.add_frontend
-<original-branch>.improver_usability
+<original-branch>.add_backend        → worktree at <repo>.worktree/<original-branch>.add_backend/
+<original-branch>.add_frontend       → worktree at <repo>.worktree/<original-branch>.add_frontend/
+<original-branch>.improver_usability → worktree at <repo>.worktree/<original-branch>.improver_usability/
 ```
 
 ---
@@ -218,7 +324,11 @@ Use descriptive names that reflect each PR's responsibility:
 
 Always write the PR body to a temp file and use `--body-file`. Never pass the body inline with `--body "..."` because PR descriptions contain markdown backticks that trigger the backtick-command-substitution hook.
 
+For split PRs, run the `gh pr create` command **from inside each child worktree directory**:
+
 ```sh
+cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
+
 cat > /tmp/pr_body.md << 'ENDBODY'
 # Description ✍️
 ...
@@ -228,13 +338,19 @@ GH_USER=$(gh api user --jq '.login')
 REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
 BRANCH=$(git branch --show-current)
 
+git push origin "$BRANCH"
+
 gh pr create \
   --repo "$REPO" \
   --base "$(echo "$BASE_REF" | sed 's|.*/||')" \
   --head "$GH_USER:$BRANCH" \
   --title "PREFIX-XXXX Summary" \
   --body-file /tmp/pr_body.md
+
+cd "$REPO_DIR"
 ```
+
+After each PR is created, update the `Status` column in `BREAKER_PLAN.md` to `done`.
 
 ---
 
@@ -321,7 +437,8 @@ git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2}
 
 - [ ] ACK: PR is within MAX lines — if NAK, stop and run the SRP split workflow first
 
-For split PRs, also verify integrity:
+For split PRs, run the size gate **from inside each child worktree** and also verify integrity:
 
+- [ ] ACK: every child worktree PR is within MAX lines
 - [ ] ACK: sum of all child PR lines == mother branch lines — if NAK, changes were lost or duplicated during the split
-- [ ] ACK: every child PR is independent, self-sufficient, and within MAX lines
+- [ ] ACK: every child PR is independent and self-sufficient
