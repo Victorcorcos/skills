@@ -11,11 +11,31 @@ Here is the desired workflow of this task in detail.
 
 ---
 
+## Prerequisites
+
+Before doing anything else, verify that the required tools are installed.
+
+### gh (GitHub CLI)
+
+`gh` is **required** to run this skill. It is used to identify the pull request, post inline review comments, and submit the review summary.
+
+```bash
+command -v gh >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+```
+
+If `gh` is **MISSING**, stop immediately and ask the developer:
+
+> "`gh` (GitHub CLI) is not installed. It is required by the reviewer skill to post comments on GitHub pull requests. Please install it from https://cli.github.com/ and run `gh auth login` to authenticate."
+
+Then **stop and wait** — do not proceed until `gh` is available and authenticated.
+
+---
+
 ## Step 1 — Resolve the Diff Base and PR Info
 
 Before anything else, ensure git references are up-to-date, resolve the diff base, obtain the changed code, and identify the associated pull request.
 
-### Prerequisites
+### Fetch remotes
 
 First, update all remote references to ensure they match the latest state:
 

@@ -9,11 +9,31 @@ description: 'Analyze the current git diff, draft a pull request title and descr
 
 ---
 
+## Prerequisites
+
+Before doing anything else, verify that the required tools are installed.
+
+### gh (GitHub CLI)
+
+`gh` is **required** to run this skill. It is used to create the pull request, apply labels, and assign reviewers.
+
+```bash
+command -v gh >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+```
+
+If `gh` is **MISSING**, stop immediately and ask the developer:
+
+> "`gh` (GitHub CLI) is not installed. It is required by the creator skill to create pull requests on GitHub. Please install it from https://cli.github.com/ and run `gh auth login` to authenticate."
+
+Then **stop and wait** — do not proceed until `gh` is available and authenticated.
+
+---
+
 ## Step 1 — Diff Size Guard
 
 Before anything else, ensure git references are up-to-date, resolve a diff base, and estimate the diff size.
 
-### Prerequisites
+### Fetch remotes
 
 First, update all remote references to ensure they match the latest state:
 

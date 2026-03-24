@@ -20,6 +20,26 @@ Here is the desired workflow of this task in detail.
 
 ---
 
+## Prerequisites
+
+Before doing anything else, verify that the required tools are installed.
+
+### gh (GitHub CLI)
+
+`gh` is **required** to run this skill. It is used to fetch PR comments, post replies to reviewers, and interact with the GitHub API.
+
+```bash
+command -v gh >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+```
+
+If `gh` is **MISSING**, stop immediately and ask the developer:
+
+> "`gh` (GitHub CLI) is not installed. It is required by the fixer skill to fetch and reply to PR review comments on GitHub. Please install it from https://cli.github.com/ and run `gh auth login` to authenticate."
+
+Then **stop and wait** — do not proceed until `gh` is available and authenticated.
+
+---
+
 ## Step 0 — Resolve the Pull Request
 
 Determine which PR to work on. Use the following fallback chain:
