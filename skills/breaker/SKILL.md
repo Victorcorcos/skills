@@ -301,6 +301,20 @@ Use descriptive names that reflect each PR's responsibility. The branch name dou
 
 ---
 
+## Uncommitted changes
+
+Before writing the PR title and description, check for uncommitted work:
+
+1. Run `git status` to detect staged, unstaged, or untracked changes
+2. If any exist, **ask the developer only**: which files should be included in this commit?
+3. Wait for confirmation before staging anything
+4. Generate the commit message from the diff following the PR title format defined in this doc — do not ask the developer for it
+5. Only then proceed to writing the PR title and description
+
+Never assume all uncommitted changes belong to the current PR — the developer may have unrelated work in progress.
+
+---
+
 ## PR Title
 
 - Format: `PREFIX-XXXX <plain-language summary>` — e.g. `DIGIT-3121 Add offline support for map view` or `DPMS-42 Fix session timeout`
@@ -324,7 +338,33 @@ Use descriptive names that reflect each PR's responsibility. The branch name dou
 
 Always write the PR body to a temp file and use `--body-file`. Never pass the body inline with `--body "..."` because PR descriptions contain markdown backticks that trigger the backtick-command-substitution hook.
 
-For split PRs, run the `gh pr create` command **from inside each child worktree directory**:
+### Single PR (diff within MAX)
+
+Run from the current working directory:
+
+```sh
+cat > /tmp/pr_body.md << 'ENDBODY'
+# Description ✍️
+...
+ENDBODY
+
+GH_USER=$(gh api user --jq '.login')
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+BRANCH=$(git branch --show-current)
+
+git push origin "$BRANCH"
+
+gh pr create \
+  --repo "$REPO" \
+  --base "$(echo "$BASE_REF" | sed 's|.*/||')" \
+  --head "$GH_USER:$BRANCH" \
+  --title "PREFIX-XXXX Summary" \
+  --body-file /tmp/pr_body.md
+```
+
+### Split PRs (one per child)
+
+Each child PR gets its **own independent PR title and description**, written separately according to its responsibility. Repeat the following block for every child in `BREAKER_PLAN.md`, substituting that child's branch name, title, and body:
 
 ```sh
 cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
@@ -344,13 +384,13 @@ gh pr create \
   --repo "$REPO" \
   --base "$(echo "$BASE_REF" | sed 's|.*/||')" \
   --head "$GH_USER:$BRANCH" \
-  --title "PREFIX-XXXX Summary" \
+  --title "PREFIX-XXXX Child summary" \
   --body-file /tmp/pr_body.md
 
 cd "$REPO_DIR"
 ```
 
-After each PR is created, update the `Status` column in `BREAKER_PLAN.md` to `done`.
+After each child PR is created, update the `Status` column in `BREAKER_PLAN.md` to `done`.
 
 ---
 
@@ -409,22 +449,6 @@ Assume a tester (not the developer) will validate this PR. Write numbered step-b
 - If `TICKET` was resolved, add a link: `[TICKET](link/to/TICKET)` (following the `pull_request_template.md` ticket guidance and the extract ticket title and code)
 - If no ticket was resolved, remove this section entirely — do **not** write any placeholder text
 
----
-
-## Uncommitted changes
-
-Before running the pre-submit checklist, check for uncommitted work:
-
-1. Run `git status` to detect staged, unstaged, or untracked changes
-2. If any exist, **ask the developer only**: which files should be included in this commit?
-3. Wait for confirmation before staging anything
-4. Generate the commit message from the diff following the PR title format defined in this doc — do not ask the developer for it
-5. Only then proceed to the checklist below
-
-Never assume all uncommitted changes belong to the current PR — the developer may have unrelated work in progress.
-
----
-
 ## Pre-submit checklist
 
 **Do not open the PR until every item below passes.**
@@ -435,10 +459,52 @@ Never assume all uncommitted changes belong to the current PR — the developer 
 git diff $(git merge-base HEAD "$BASE_REF")..HEAD --numstat | awk '{a+=$1;d+=$2} END{print a+d}'
 ```
 
-- [ ] ACK: PR is within MAX lines — if NAK, stop and run the SRP split workflow first
+**Single PR** — verify before opening:
 
-For split PRs, run the size gate **from inside each child worktree** and also verify integrity:
+- Total lines are within MAX. If not, stop and run the SRP split workflow first.
+- No uncommitted changes remain that belong to this PR.
 
-- [ ] ACK: every child worktree PR is within MAX lines
-- [ ] ACK: sum of all child PR lines == mother branch lines — if NAK, changes were lost or duplicated during the split
-- [ ] ACK: every child PR is independent and self-sufficient
+**Split PRs** — run the size gate from inside each child worktree and also verify:
+
+- Every child PR is within MAX lines.
+- The sum of all child PR lines equals the mother branch total. If not, changes were lost or duplicated during the split — fix before opening any PR.
+- Every child PR is independent and self-sufficient.
+
+When all checks pass, proceed to **Opening the PR**.
+
+---
+
+## Final Summary
+
+After all PRs have been opened, print a summary to the terminal.
+
+### Split PRs
+
+```
+## Breaker Complete
+
+### PRs Opened
+
+| # |    Branch    |   PR URL   |          Worktree Path          |
+|---|--------------|------------|---------------------------------|
+| 1 | `<branch-1>` | <pr-url-1> | `<absolute-path-to-worktree-1>` |
+| 2 | `<branch-2>` | <pr-url-2> | `<absolute-path-to-worktree-2>` |
+| 3 | `<branch-3>` | <pr-url-3> | `<absolute-path-to-worktree-3>` |
+
+### Stats
+- Total PRs opened: N
+- Mother branch: <branch-name> (+AAA -SSS lines)
+- Each worktree is still live — continue work there to address review feedback.
+```
+
+### Single PR
+
+```
+## Breaker Complete
+
+### PR Opened
+
+|   Branch   |  PR URL  |
+|------------|----------|
+| `<branch>` | <pr-url> |
+```
