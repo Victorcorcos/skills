@@ -241,8 +241,8 @@ After showing the proposed fix, you **MUST** use the `AskUserQuestion` tool to c
 
 Always use these two options:
 
-1. `label: "Apply fix"`, `description: "[one-line description of the fix]"`
-2. `label: "Skip"`, `description: "Move to the next issue without changes"`
+1. `label: "Yes"`, `description: "[one-line description of the fix]"`
+2. `label: "No"`, `description: "Move to the next issue without changes"`
 
 The question text must follow this format:
 > `"Issue #N — [Short description]: apply this fix?"`
@@ -255,8 +255,8 @@ The user can always select `Other` (automatically provided by the tool) to expla
 
 ### Handling each option
 
-- **Apply fix**: Apply the fix to the code immediately. Confirm it was applied and move to the next issue.
-- **Skip**: Acknowledge the skip and move to the next issue. Do not apply any change.
+- **Yes**: Apply the fix to the code immediately. Confirm it was applied and move to the next issue.
+- **No**: Acknowledge the skip and move to the next issue. Do not apply any change.
 - **Other** (user typed a custom response): Read the user's issue-specific explanation. Propose a revised fix based on their feedback. Show the updated diff. Ask again with the `AskUserQuestion` tool using the same structure so the user can choose with the keyboard or type a refined custom response. Repeat until the user picks a solution or skips.
 
 ### Additional rule for `Test Quality` findings
