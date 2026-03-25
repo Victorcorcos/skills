@@ -320,6 +320,7 @@ Never assume all uncommitted changes belong to the current PR — the developer 
 - Format: `PREFIX-XXXX <plain-language summary>` — e.g. `DIGIT-3121 Add offline support for map view` or `DPMS-42 Fix session timeout`
 - Extract the ticket number from the branch name (see **Ticket number** section below) before writing the title
 - Title must be a short, plain-language summary of the change (no conventional commits style required)
+- **For split PRs only**: append `(N/TOTAL)` at the end of the title to indicate which child this is — e.g. `DIGIT-3121 Add backend layer (1/3)`, `DIGIT-3121 Add frontend layer (2/3)`, `DIGIT-3121 Improve usability (3/3)`
 
 ## PR Description
 
@@ -384,7 +385,7 @@ gh pr create \
   --repo "$REPO" \
   --base "$(echo "$BASE_REF" | sed 's|.*/||')" \
   --head "$GH_USER:$BRANCH" \
-  --title "PREFIX-XXXX Child summary" \
+  --title "PREFIX-XXXX Child summary (N/TOTAL)" \
   --body-file /tmp/pr_body.md
 
 cd "$REPO_DIR"
