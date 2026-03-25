@@ -75,7 +75,7 @@ Then count total lines changed (insertions + deletions):
 git diff "$BASE_REF" --numstat | awk '{adds+=$1; dels+=$2} END {print adds+dels}'
 ```
 
-If the diff exceeds **900 lines changed**, stop and warn the user to consider running `/breaker` first.
+If the diff exceeds **1000 lines changed**, stop and warn the user to consider running `/breaker` first.
 Only proceed if the user explicitly confirms they want to continue.
 
 ---
