@@ -13,9 +13,9 @@ description: 'Open a pull request following the full PR workflow: resolve the ba
 
 | Parameter | Required | Default |                                                  Description                                                  |
 |-----------|----------|---------|---------------------------------------------------------------------------------------------------------------|
-|   `MAX`   |    No    |  `900`  | Maximum lines permitted per PR (including tests). Pass as the first argument: `/breaker 900`, `$breaker 900`. |
+|   `MAX`   |    No    |  `1000`  | Maximum lines permitted per PR (including tests). Pass as the first argument: `/breaker 1000`, `$breaker 1000`. |
 
-If the user provides an integer argument, use it as `MAX`. Otherwise default to **900**.
+If the user provides an integer argument, use it as `MAX`. Otherwise default to **1000**.
 
 ---
 
