@@ -313,6 +313,7 @@ The tables below are your checklists for categories 1–4. Use them to identify 
 | Smell | Reason | Solution |
 |-------|--------|----------|
 | **Long Method** | Hard to read, test, debug, and reuse. Violates Single Responsibility Principle and increases cognitive load. | Extract smaller, focused methods with clear names. Apply "one level of abstraction per function" rule. |
+| **Step Down Rule Violation** | The code cannot be read top-to-bottom as a coherent narrative because readers must jump into unrelated helper definitions to understand the flow. | Order methods so the high-level story appears first, followed immediately by the next level of called methods. Prefer sequences like `A -> B/C`, then `B -> D/E`, then `D`, `E`, and finally `C`. |
 | **God Class (Large Class)** | Centralizes unrelated logic, becomes a bottleneck for changes, difficult to test in isolation. | Apply SRP. Extract cohesive subsets of fields and methods into separate classes. Delegate responsibilities. |
 | **Duplicate Code** | Every bug fix or change must be applied in all locations. Missing one introduces inconsistencies and bugs. | Extract into a shared method or class. Apply DRY. Use inheritance or composition to unify common behavior. |
 | **Long Parameter List** | Hard to call correctly, easy to invoke with wrong argument order, signals method is doing too much. | Introduce a Parameter Object. Use Preserve Whole Object. Apply builder or fluent interface patterns. |
