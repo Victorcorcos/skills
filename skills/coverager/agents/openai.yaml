@@ -1,0 +1,6 @@
+interface:
+  display_name: "📈 Coverager"
+  short_description: "Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report."
+  default_prompt: "$coverager path/to/coverage/index.html"
+policy:
+  allow_implicit_invocation: false

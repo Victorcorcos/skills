@@ -45,6 +45,7 @@ This repository supports:
 | 🧪 | BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
+| 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
 | 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
 
@@ -57,8 +58,10 @@ flowchart LR
     A[🗺️ planner] --> B[Coding]
     B --> C[✨ improver]
     B --> D[🧪 bdder]
+    B --> J[📈 coverager]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
+    J --> E[🌍 creator]
     E -->|if small| F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
@@ -73,6 +76,7 @@ flowchart LR
     style G fill:#DC2626,color:#fff
     style H fill:#DB2777,color:#fff
     style I fill:#7C3AED,color:#fff
+    style J fill:#16a34a,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 

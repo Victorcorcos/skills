@@ -11,6 +11,7 @@ import shutil
 SKILLS: tuple[str, ...] = (
     "bdder",
     "breaker",
+    "coverager",
     "creator",
     "fixer",
     "improver",
