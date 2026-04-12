@@ -1,315 +1,103 @@
 ---
 name: creator
-description: 'Analyze the current git diff, draft a pull request title and description, generate a pull_request.md file, and open the PR on GitHub with labels. Use when asked to draft, create, or open a pull request.'
+description: 'Analyze the current git diff, draft a pull request title and description, generate a pull_request.md file, and open the PR on GitHub. Use when asked to draft, create, or open a pull request.'
 ---
 
 # 🌍 Creator
 
-> **Purpose**: Analyze the current branch diff, draft a pull request title and description, generate a `pull_request.md` file, and open the PR on GitHub with appropriate labels.
+> **Purpose**: Analyze the current branch diff, generate a `pull_request.md` file, and open the PR on GitHub.
 
----
-
-## Prerequisites
-
-Before doing anything else, verify that the required tools are installed.
-
-### gh (GitHub CLI)
-
-`gh` is **required** to run this skill. It is used to create the pull request, apply labels, and assign reviewers.
-
-```bash
-command -v gh >/dev/null 2>&1 && echo "OK" || echo "MISSING"
-```
-
-If `gh` is **MISSING**, stop immediately and ask the developer:
-
-> "`gh` (GitHub CLI) is not installed. It is required by the creator skill to create pull requests on GitHub. Please install it from https://cli.github.com/ and run `gh auth login` to authenticate."
-
-Then **stop and wait** — do not proceed until `gh` is available and authenticated.
+**Requires**: `gh` (GitHub CLI) installed and authenticated. Stop if missing.
 
 ---
 
 ## Step 1 — Diff Size Guard
 
-Before anything else, ensure git references are up-to-date, resolve a diff base, and estimate the diff size.
-
-### Fetch remotes
-
-First, update all remote references to ensure they match the latest state:
-
 ```bash
 git fetch --all --prune
-```
 
-This command:
-- Fetches updates from all remotes (`upstream` and `origin`)
-- Removes local references to deleted remote branches (`--prune`)
-- Ensures the fallback chain below finds valid, current references
-
-**Important**: Without this step, the branch resolution may fail if the local git database is stale.
-
-### Resolve the diff base
-
-**Fallback chain** for the diff base, try each in order until one succeeds:
-1. `upstream/main`
-2. `upstream/master`
-3. `origin/main`
-4. `origin/master`
-
-Store whichever works as `BASE_REF` and use it throughout.
-
-Resolve `BASE_REF`:
-
-```bash
 BASE_REF=""
 for ref in upstream/main upstream/master origin/main origin/master; do
   git rev-parse --verify --quiet "$ref" >/dev/null && BASE_REF="$ref" && break
 done
 
-test -n "$BASE_REF" && echo "$BASE_REF"
-```
-
-Then count total lines changed (insertions + deletions):
-
-```bash
 git diff "$BASE_REF" --numstat | awk '{adds+=$1; dels+=$2} END {print adds+dels}'
 ```
 
-If the diff exceeds **1000 lines changed**, stop and warn the user to consider running `/breaker` first.
-Only proceed if the user explicitly confirms they want to continue.
+If the diff exceeds **1000 lines changed**, warn the user to consider `/breaker` first. Only proceed if they confirm.
 
 ---
 
 ## Step 2 — Analyze Changes
 
-Run the diff and read the commit log against the resolved base:
+Read the diff and commit log against `BASE_REF`:
 
 ```bash
 git diff "$BASE_REF"
-```
-
-```bash
 git log "$BASE_REF"..HEAD --reverse --format="### %s%n%n%b"
 ```
 
-From the diff and commit messages, extract:
-
-1. **Summary**: What changed and why (use commit messages to understand intent, cross-reference with the diff for accuracy).
-2. **Modules affected**: High-level areas of the codebase touched.
-3. **Type of change**: bug fix, new feature, breaking change, refactor, docs, tests.
-4. **Breaking changes**: API signature changes, removed endpoints, migrations, etc.
-5. **Visual changes**: If UI files changed, note where screenshots/recordings should be added.
+Extract: summary, modules affected, change type, breaking changes, and visual changes.
 
 ---
 
 ## Step 3 — Extract Ticket Number
 
-Extract the ticket number from the current branch name using this regex:
+Extract ticket from the branch name using regex `(DIGIT|digit|DPMS|dpms)-?(\d+)`. Normalise to uppercase with hyphen (e.g. `DIGIT-3131`).
 
-```
-(DIGIT|digit|DPMS|dpms)-?(\d+)
-```
-
-```bash
-git rev-parse --abbrev-ref HEAD
-```
-
-Normalise the match to uppercase with a hyphen separator (e.g. `DIGIT-3131`, `DPMS-4314`).
-
-Examples of branch names that match:
-- `digit-3131` → `DIGIT-3131`
-- `DIGIT3131` → `DIGIT-3131`
-- `feature/dpms-4314-add-login` → `DPMS-4314`
-- `DPMS1492_some_feature` → `DPMS-1492`
-
-**If the branch name does not match**, ask the developer:
-
-> "I couldn't find a ticket number in the branch name. Do you have one? (e.g. DIGIT-3131)"
-
-**If the developer does not know or skips**, omit the ticket entirely:
-- Do **not** add it to the PR title.
-- Remove the `# Ticket 🎫` section from `pull_request.md` completely — do not write any placeholder text.
-
-Store the resolved ticket (or absence of one) as `TICKET` and use it in Steps 4 and 7.
+If not found, ask the developer. If skipped, omit the ticket from the title and remove the `# Ticket 🎫` section entirely.
 
 ---
 
 ## Step 4 — Draft The PR Title
 
-Rules:
-
-- Max 72 characters
-- Imperative mood (for example "Add payment retry logic")
-- Specific enough that reviewers understand scope from the title alone
-- If `TICKET` was resolved, prefix the title: `TICKET Description` (e.g. `DIGIT-3131 Add payment retry logic`)
-- If `TICKET` is absent, omit the prefix entirely
+- Max 72 characters, imperative mood
+- If ticket exists, prefix: `TICKET Description` (e.g. `DIGIT-3131 Add payment retry logic`)
 
 ---
 
 ## Step 5 — Draft The PR Description
 
-Use the PR template from the current project first:
+Use the project's `.github/pull_request_template.md` if it exists. Otherwise fall back to the template in this skill's `references/pull_request_template.md`.
 
-`.github/pull_request_template.md`
-
-If that file does not exist, fall back to the shared template that ships with this skills pack. Prefer this lookup order:
-
-1. `$SKILLS_PATH/skills/creator/references/pull_request_template.md` (when `SKILLS_PATH` is set, common for Claude Code installs)
-2. `~/.codex/skills/creator/references/pull_request_template.md` (common for Codex CLI installs)
-3. `skills/creator/references/pull_request_template.md` (when working inside this skills repository)
-
-Fill in every section of the template. Additionally, ensure the description includes:
-
-- **Modules affected**: The areas identified in Step 2.
-- **Breaking changes**: If any were detected, add a prominent warning callout.
-- **Screenshot placeholders**: If visual changes were detected, add placeholders where screenshots should go.
-- Enhance clarity with markdown features: code fences with language tags, tables, blockquotes, GitHub alert admonitions, mermaid diagrams, `<details>` blocks, etc.
+Fill in every section. Enhance with markdown features (code fences, tables, `<details>` blocks, etc.) where helpful.
 
 ---
 
 ## Step 6 — Write The Test Guidance Section
 
-Assume a tester (not the developer) will validate this PR. Write numbered step-by-step checks that include:
-
-- **Preconditions**: Setup, test data, or permissions required before testing.
-- **Concrete actions**: Reference specific pages, endpoints, buttons, or CLI commands the tester should interact with.
-- **Expected results**: State what the tester should observe after each action (e.g. "The toast shows 'Payment saved'", "The API returns 200 with `{ status: 'ok' }`").
-- **Happy path first**, then edge cases (e.g. invalid input, empty state, unauthorized access).
-- **Regression checks**: If the change touches shared code, note areas that should still work as before.
+Write numbered steps for a tester (not the developer): preconditions, concrete actions, expected results. Cover happy path first, then edge cases and regression checks.
 
 ---
 
 ## Step 7 — Generate `pull_request.md`
 
-Create a file at the repository root called `pull_request.md` containing **only the PR body** — no title, no wrapper headings.
-
-The file must start directly with the first section from the PR template (e.g. `# Description ✍️`) and contain the full description including test guidance:
-
-```markdown
-# Description ✍️
-
-<the drafted description>
-
-# Overview 🔍
-
-<overview, screenshots, etc.>
-
-# Test Guidance 🦮
-
-<step-by-step tester instructions>
-
-# Ticket 🎫                               ← include ONLY if TICKET was resolved
-
-[DIGIT-3131](https://plane.oxean.com.br/oxeanbits/browse/DIGIT-3131)
-```
-
-> **Important**:
-> - Do NOT add a `# PR Title` section or a `# PR Description` wrapper. The title is passed via `--title` to `gh pr create`; this file is used as `--body-file` and is the description verbatim.
-> - If no ticket was resolved, remove the `# Ticket 🎫` section entirely. Do **not** write any placeholder text such as `DIGIT-XXXX` or "No ticket number provided".
-
-Do not commit this file.
+Create `pull_request.md` at the repository root with **only the PR body** (no title wrapper). Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved. Do not commit this file.
 
 ---
 
 ## Step 8 — Review & Confirm
 
-Before creating the PR, present the following summary to the user and **wait for explicit approval**:
-
-1. **PR Title**: The drafted title from Step 4.
-2. **Labels**: The selected labels from the label table.
-3. **Draft or Ready**: Whether to open as draft (`--draft`) or ready for review.
-4. **Description preview**: A brief excerpt or confirmation that the full body is in `pull_request.md`.
-
-> "Here's what I'll open:
-> - **Title**: `<title>`
-> - **Labels**: `label1`, `label2`
-> - **Mode**: Draft / Ready for review
->
-> Should I proceed?"
-
-Only continue to the PR creation steps below after the user confirms.
+Present the PR title and draft/ready mode to the user. **Wait for explicit approval** before proceeding.
 
 ---
 
 ## Step 9 — Create The Pull Request
 
-### Pre-flight: resolve owner and branch
-
-`gh pr create` will abort if it detects uncommitted files (like the freshly generated `pull_request.md`) and no `--head` flag is given. Always supply `--head` in `owner:branch` format and `--base` explicitly to avoid both issues.
-
-Resolve the required values first:
-
 ```bash
-# Remote owner (GitHub username or org that owns the repo)
 GH_OWNER=$(gh repo view --json owner --jq '.owner.login')
-
-# Current branch name
 GH_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-# Base branch (master or main — match the repo default)
 GH_BASE=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')
 
-echo "$GH_OWNER:$GH_BRANCH → $GH_BASE"
-```
+# Push if needed
+git push origin "$GH_BRANCH"
 
-### Create the PR
-
-If the user chose **draft mode** in Step 8, add `--draft`:
-
-```bash
 gh pr create \
   --title "<title>" \
   --body-file pull_request.md \
   --head "$GH_OWNER:$GH_BRANCH" \
   --base "$GH_BASE" \
-  --draft  # omit this flag if the user chose "Ready for review"
+  --draft  # omit if user chose "Ready for review"
 ```
 
-> **Why `--head owner:branch`?**
-> Without it, `gh` aborts when it finds any uncommitted file in the working tree (including `pull_request.md` itself).
-> The bare `--head branch` form also fails with *"Head sha can't be blank"* because GitHub's API requires the fully-qualified `owner:branch` reference.
-
-### Push the branch first if needed
-
-If the branch has not been pushed to the remote yet, push it before creating the PR:
-
-```bash
-git push origin "$GH_BRANCH"
-```
-
-### Label Selection
-
-After creating the PR, apply the most relevant labels (typically 1 to 3). Choose labels based on the change type and status.
-
-| Color | Label | Apply when… |
-|-------|-------|-------------|
-| `#7157FF` | `user story 💬` | The PR implements a user-facing feature or story |
-| `#FF0000` | `bug 🐛` | The PR fixes a bug |
-| `#CC317C` | `technical debt 🛠️` | The PR addresses tech debt or cleanup |
-| `#EFF714` | `WIP 🚧` | The PR is not yet complete |
-| `#0075ca` | `documentation 📖` | The PR is primarily documentation |
-| `#101c73` | `architecture 🏰` | The PR changes architectural patterns |
-| `#0052CC` | `security 🛡️` | The PR addresses security concerns |
-| `#541AE7` | `automated tests 🤖` | The PR adds or modifies tests |
-| `#BFD4F2` | `enhancement ⏫` | The PR enhances existing functionality |
-| `#0052CC` | `dependencies 🔗` | The PR updates dependencies |
-| `#FFFF00` | `revert ⏪` | The PR reverts a previous change |
-| `#D692BB` | `spike 🕸️` | The PR is exploratory / proof-of-concept |
-
-```bash
-gh pr edit --add-label "label1,label2"
-```
-
-If a label does not exist in the repository, create it first:
-
-```bash
-gh label create "label name" --color "HEX" --description ""
-```
-
-### Reviewer Assignment (Optional)
-
-Ask the user if they want to assign reviewers. If yes, add them:
-
-```bash
-gh pr edit --add-reviewer "username1,username2"
-```
+> Always use `--head owner:branch` format to avoid `gh` aborting on uncommitted files.
