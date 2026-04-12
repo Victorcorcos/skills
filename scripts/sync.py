@@ -13,6 +13,7 @@ SKILLS: tuple[str, ...] = (
     "breaker",
     "coverager",
     "creator",
+    "filler",
     "fixer",
     "improver",
     "planner",

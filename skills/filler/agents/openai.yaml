@@ -1,0 +1,6 @@
+interface:
+  display_name: "📋 Filler"
+  short_description: "Draft a pull request title and description from the current diff, and generate pull_request.md for copy-paste."
+  default_prompt: "Analyze the current git diff, draft a PR title and description, and generate pull_request.md. Stop before opening the PR on GitHub."
+policy:
+  allow_implicit_invocation: false

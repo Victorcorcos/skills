@@ -1,0 +1,75 @@
+---
+name: filler
+description: 'Analyze the current git diff, draft a pull request title and description, and generate a pull_request.md file for manual copy-paste. Stops before opening the PR on GitHub. Use when you want to fill in the PR description yourself without creating the PR.'
+---
+
+# 📋 Filler
+
+> **Purpose**: Analyze the current branch diff and generate a `pull_request.md` file ready to copy-paste into a PR. Stops before creating the PR on GitHub.
+
+---
+
+## Step 1 — Diff Size Guard
+
+```bash
+git fetch --all --prune
+
+BASE_REF=""
+for ref in upstream/main upstream/master origin/main origin/master; do
+  git rev-parse --verify --quiet "$ref" >/dev/null && BASE_REF="$ref" && break
+done
+
+git diff "$BASE_REF" --numstat | awk '{adds+=$1; dels+=$2} END {print adds+dels}'
+```
+
+If the diff exceeds **1000 lines changed**, warn the user to consider `/breaker` first. Only proceed if they confirm.
+
+---
+
+## Step 2 — Analyze Changes
+
+Read the diff and commit log against `BASE_REF`:
+
+```bash
+git diff "$BASE_REF"
+git log "$BASE_REF"..HEAD --reverse --format="### %s%n%n%b"
+```
+
+Extract: summary, modules affected, change type, breaking changes, and visual changes.
+
+---
+
+## Step 3 — Extract Ticket Number
+
+Extract ticket from the branch name using regex `(DIGIT|digit|DPMS|dpms)-?(\d+)`. Normalise to uppercase with hyphen (e.g. `DIGIT-3131`).
+
+If not found, ask the developer. If skipped, omit the ticket from the title and remove the `# Ticket 🎫` section entirely.
+
+---
+
+## Step 4 — Draft The PR Title
+
+- Max 72 characters, imperative mood
+- If ticket exists, prefix: `TICKET Description` (e.g. `DIGIT-3131 Add payment retry logic`)
+
+---
+
+## Step 5 — Draft The PR Description
+
+Use the project's `.github/pull_request_template.md` if it exists. Otherwise fall back to the template in this skill's `references/pull_request_template.md`.
+
+Fill in every section. Enhance with markdown features (code fences, tables, `<details>` blocks, etc.) where helpful.
+
+---
+
+## Step 6 — Write The Test Guidance Section
+
+Write numbered steps for a tester (not the developer): preconditions, concrete actions, expected results. Cover happy path first, then edge cases and regression checks.
+
+---
+
+## Step 7 — Generate `pull_request.md`
+
+Create `pull_request.md` at the repository root with **only the PR body** (no title wrapper). Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved. Do not commit this file.
+
+After writing the file, display the PR title and the full contents of `pull_request.md` so the user can review and copy-paste them into their PR.

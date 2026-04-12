@@ -44,6 +44,7 @@ This repository supports:
 | ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
 | 🧪 | BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
+| 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
 | 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
