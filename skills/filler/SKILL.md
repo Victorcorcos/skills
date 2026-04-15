@@ -9,16 +9,19 @@ description: 'Analyze the current git diff, draft a pull request title and descr
 
 ---
 
+## Input
+
+| Parameter  | Required | Default |                                                  Description                                                   |
+|------------|----------|---------|----------------------------------------------------------------------------------------------------------------|
+| `BASE_REF` |   Yes    |  —      | The base ref to diff against. Pass as the first argument: `/filler upstream/master`, `/filler origin/main`. |
+
+If the user does not provide a base ref, stop and ask for one.
+
+---
+
 ## Step 1 — Diff Size Guard
 
 ```bash
-git fetch --all --prune
-
-BASE_REF=""
-for ref in upstream/main upstream/master origin/main origin/master; do
-  git rev-parse --verify --quiet "$ref" >/dev/null && BASE_REF="$ref" && break
-done
-
 git diff "$BASE_REF" --numstat | awk '{adds+=$1; dels+=$2} END {print adds+dels}'
 ```
 
