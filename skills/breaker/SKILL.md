@@ -217,28 +217,25 @@ Example — if the skill is invoked inside `/status-survey` with three child bra
 
 ##### Create each worktree
 
-For each child PR in `BREAKER_PLAN.md`, resolve the base branch short name and run these 4 steps:
+For each child PR in `BREAKER_PLAN.md`, resolve the base branch short name and run these 3 steps:
 
 ```bash
 REPO_DIR="$(pwd)"
 REPO_NAME="$(basename "$REPO_DIR")"
 BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master"
-CHILD_BRANCH="digit3121_offline_maps.add_backend"  # adjust per child
+CHILD_BRANCH="digit3121_offline_maps.add_backend"  # just an example, please adjust per child
 
-# 1. Create the worktree from the base branch
-branchlet create -n "$CHILD_BRANCH" -s "$BASE_SHORT"
+# 1. Create the worktree from the base branch and attach it to the child branch
+branchlet create -n "$CHILD_BRANCH" -s "$BASE_SHORT" -b "$CHILD_BRANCH"
 
 # 2. Enter the worktree
 cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
 
-# 3. Create and switch to the child branch (frees the base branch)
-git switch -c "$CHILD_BRANCH"
-
-# 4. Return to the mother directory
+# 3. Return to the mother directory
 cd "$REPO_DIR"
 ```
 
-These 4 steps are **mandatory for every child worktree**. Step 3 is critical — it associates the worktree with its own branch instead of leaving it on the base branch.
+These 3 steps are **mandatory for every child worktree**.
 
 ##### Populate each worktree
 
