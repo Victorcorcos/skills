@@ -42,18 +42,24 @@ def copy_skill_dir(src: Path, dst: Path) -> None:
     shutil.copytree(src, dst)
 
 
-def strip_frontmatter(markdown: str) -> str:
-    """Remove YAML frontmatter from SKILL.md before installing as a Claude command."""
-    lines = markdown.splitlines(keepends=True)
-    if not lines:
-        return markdown
-    if lines[0].strip() != "---":
-        return markdown
-
-    for index in range(1, len(lines)):
-        if lines[index].strip() == "---":
-            return "".join(lines[index + 1 :]).lstrip("\n")
-    return markdown
+def cleanup_legacy_claude_commands(
+    claude_out_dir: Path, write: bool
+) -> None:
+    """Remove stale `.claude/commands/<skill>.md` files left over from the
+    pre-folder Claude install layout. Only files whose stem matches a skill in
+    SKILLS are removed — anything else the user authored stays untouched."""
+    legacy_dir = claude_out_dir.parent / "commands"
+    if not legacy_dir.is_dir():
+        return
+    for name in SKILLS:
+        legacy_file = legacy_dir / f"{name}.md"
+        if not legacy_file.is_file():
+            continue
+        if write:
+            legacy_file.unlink()
+            print(f"Removed  (Claude legacy): {legacy_file}")
+        else:
+            print(f"Would remove (Claude legacy): {legacy_file}")
 
 
 def sync(
@@ -70,34 +76,29 @@ def sync(
         )
 
     for name in SKILLS:
-        src = src_dir / name / "SKILL.md"
+        skill_src = src_dir / name
+        src = skill_src / "SKILL.md"
         if not src.exists():
             raise SystemExit(f"Missing skill file: {src}")
-        body = src.read_text(encoding="utf-8")
 
         if write:
-            if claude_out_dir:
-                # Claude Code commands: write a frontmatter-stripped view of the skill.
-                dst = claude_out_dir / f"{name}.md"
-                write_text(dst, strip_frontmatter(body))
-                print(f"Written  (Claude): {dst}")
-            if codex_out_dir:
-                # Codex CLI: write the canonical source skill as-is.
-                dst = codex_out_dir / name / "SKILL.md"
-                write_text(dst, body)
-                print(f"Written  (Codex):  {dst}")
-            if opencode_out_dir:
-                # OpenCode: copy the canonical skill folder, including provider metadata.
-                dst = opencode_out_dir / name
-                copy_skill_dir(src_dir / name, dst)
-                print(f"Written  (OpenCode): {dst}")
+            for label, out_dir in (
+                ("Claude", claude_out_dir),
+                ("Codex", codex_out_dir),
+                ("OpenCode", opencode_out_dir),
+            ):
+                if not out_dir:
+                    continue
+                dst = out_dir / name
+                copy_skill_dir(skill_src, dst)
+                print(f"Written  ({label}): {dst}")
         else:
-            if claude_out_dir:
-                print(str(claude_out_dir / f"{name}.md"))
-            if codex_out_dir:
-                print(str(codex_out_dir / name / "SKILL.md"))
-            if opencode_out_dir:
-                print(str(opencode_out_dir / name / "SKILL.md"))
+            for out_dir in (claude_out_dir, codex_out_dir, opencode_out_dir):
+                if out_dir:
+                    print(str(out_dir / name / "SKILL.md"))
+
+    if claude_out_dir:
+        cleanup_legacy_claude_commands(claude_out_dir, write)
 
 
 def main() -> None:
@@ -113,7 +114,7 @@ def main() -> None:
         "--install",
         action="store_true",
         help=(
-            "Install into the current working directory's .claude/commands and your "
+            "Install into the current working directory's .claude/skills and your "
             "Codex/OpenCode skills dirs. Implies --write."
         ),
     )
@@ -125,7 +126,7 @@ def main() -> None:
     parser.add_argument(
         "--claude-out",
         default=None,
-        help="Claude commands output dir (frontmatter removed).",
+        help="Claude skills output dir (full skill folder copied).",
     )
     parser.add_argument(
         "--codex-out",
@@ -165,11 +166,11 @@ def main() -> None:
         return codex_home / "skills"
 
     if args.install:
-        claude_default = Path.cwd() / ".claude" / "commands"
+        claude_default = Path.cwd() / ".claude" / "skills"
         codex_default = default_codex_skills_dir()
         opencode_default = Path.home() / ".config" / "opencode" / "skills"
     else:
-        claude_default = root / ".claude" / "commands"
+        claude_default = root / ".claude" / "skills"
         codex_default = root / "codex"
         opencode_default = root / "opencode"
 
@@ -200,7 +201,7 @@ def main() -> None:
 
     if args.install and write:
         if claude_out_dir:
-            print(f"Installed Claude commands to: {claude_out_dir}")
+            print(f"Installed Claude skills to: {claude_out_dir}")
         if codex_out_dir:
             print(f"Installed Codex skills to: {codex_out_dir}")
         if opencode_out_dir:

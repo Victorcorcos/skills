@@ -15,8 +15,8 @@ A collection of reusable prompts and skills for software development workflows.
 
 This repository supports:
 
-- **Codex CLI** — skills installed into `~/.codex/skills/<skill-name>/SKILL.md`
-- **Claude Code** — compatibility command files installed into `.claude/commands/` and invoked as `/creator`, `/planner`, etc.
+- **Codex CLI** — skills installed into `~/.codex/skills/<skill-name>/` (full skill folder, including `scripts/`, `agents/`, etc.)
+- **Claude Code** — skills installed into `<project>/.claude/skills/<skill-name>/` (full skill folder) and invoked as `/creator`, `/planner`, etc.
 - **OpenCode** — skills installed into `~/.config/opencode/skills/<skill-name>/` and auto-discovered by the `skill` tool
 
 > [!TIP]
@@ -91,7 +91,7 @@ flowchart LR
 python3 "$SKILLS_PATH/scripts/sync.py" --install --codex
 ```
 
-This installs every skill from `skills/*` into `~/.codex/skills/<skill-name>/SKILL.md`.
+This installs every skill from `skills/*` into `~/.codex/skills/<skill-name>/`, copying the full skill folder including any `scripts/`, `references/`, and `agents/` subfolders.
 
 Restart Codex CLI to pick up the new skill.
 
@@ -103,7 +103,7 @@ From the root of any target repository:
 python3 "$SKILLS_PATH/scripts/sync.py" --install --claude
 ```
 
-This writes each skill into `<project>/.claude/commands/<skill>.md` with YAML frontmatter removed for Claude command compatibility.
+This installs each skill into `<project>/.claude/skills/<skill-name>/`, copying the full skill folder (including `scripts/`, `references/`, and `agents/` if present) so skills that ship helper scripts continue to work.
 
 ### 🟣 OpenCode - Globally
 
