@@ -1,0 +1,6 @@
+interface:
+  display_name: "🕵🏻‍♂️ Investigador"
+  short_description: "Investigate bugs, rank causes, then fix selected solutions."
+  default_prompt: "Use $investigator to investigate this bug, write BUG_INVESTIGATION.md with ranked causes and solutions, then wait for me to choose which fix to implement: "
+policy:
+  allow_implicit_invocation: false

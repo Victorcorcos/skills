@@ -48,6 +48,7 @@ This repository supports:
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
 | 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
+| 🕵🏻‍♂️ | Investigador | `/investigator` | Investigate a bug, write ranked causes and solutions to `BUG_INVESTIGATION.md`, then fix selected solutions with regression tests | 🟢 |
 | 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
 
 ---
@@ -68,6 +69,8 @@ flowchart LR
     G --> F
     I[🔍 reviewer] -->|add comments + summary| F
     F --> H[🩹 fixer]
+    B --> K[🕵🏻‍♂️ investigador]
+    K --> B
 
     style A fill:#2563EB,color:#fff
     style C fill:#D97706,color:#fff
@@ -78,6 +81,7 @@ flowchart LR
     style H fill:#DB2777,color:#fff
     style I fill:#7C3AED,color:#fff
     style J fill:#16a34a,color:#fff
+    style K fill:#0f766e,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 
@@ -174,6 +178,7 @@ Use the creator skill to generate a PR title and description
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `branchlet` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
+- 🕵🏻‍♂️ **Investigador** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions, waits for the developer to choose fixes, then implements them with regression tests that should fail on `upstream/main` and pass on the fixed branch.
 - 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
 
 ---
@@ -198,6 +203,9 @@ claude /breaker
 
 # 🩹 After receiving review feedback
 claude /fixer
+
+# 🕵🏻‍♂️ Investigate and fix a bug
+claude /investigator "Describe the bug here"
 
 # 🔍 Review your own changes
 claude /reviewer
