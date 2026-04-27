@@ -1,11 +1,11 @@
 ---
 name: investigator
-description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes, write BUG_INVESTIGATION.md with ranked problems and detailed solutions, wait for the user to select one or more solutions, then implement the selected fixes with regression tests. Use when invoked as /investigator or when asked to investigate and fix a bug through a ranked hypothesis document.'
+description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes with evidence quality, write BUG_INVESTIGATION.md with ranked problems and detailed solutions, wait for the user to select one or more solutions, then implement the selected fixes with regression tests. Use when invoked as /investigator or when asked to investigate and fix a bug through a ranked hypothesis document.'
 ---
 
-# 🕵🏻‍♂️ Investigador
+# 🕵🏻‍♂️ Investigator
 
-> **Purpose**: Read a bug description, investigate the system for likely causes, write `BUG_INVESTIGATION.md` with ranked hypotheses and detailed solutions, wait for the developer to choose one or more solutions, then implement the selected fix or fixes with an automated regression test.
+> **Purpose**: Read a bug description, investigate the system for likely causes, write `BUG_INVESTIGATION.md` with ranked hypotheses, evidence quality, and detailed solutions, wait for the developer to choose one or more solutions, then implement the selected fix or fixes with an automated regression test.
 
 ## Usage
 
@@ -22,9 +22,9 @@ If the bug description is missing, stop and ask the developer to provide it. If 
 ## Required Outputs
 
 - `BUG_INVESTIGATION.md` at the repository root.
-- A ranked markdown table in `BUG_INVESTIGATION.md` with exactly these columns: `Description`, `Ranking`, and `Solution`.
+- A ranked markdown table in `BUG_INVESTIGATION.md` with exactly these columns: `Description`, `Ranking`, `Quality`, and `Solution`.
 - One or more implemented fixes, only after the developer selects table entries.
-- An automated regression test that simulates the bug and should fail on `upstream/main` but pass on the fixed branch.
+- An automated regression test that simulates the bug and should fail on the resolved base ref but pass on the fixed branch.
 - A final summary for the developer explaining what happened, what changed, and how it was verified.
 
 ## Safety Boundaries
@@ -41,8 +41,24 @@ If the bug description is missing, stop and ask the developer to provide it. If 
 2. Identify expected behavior, actual behavior, affected workflows, and any reproduction steps.
 3. If reproduction steps are absent, infer likely entry points from the description and note that reproduction is inferred.
 4. Check the working tree status so unrelated local changes are visible before investigation.
+5. If the developer provided a base ref, store it as `BASE_REF` and use it for regression verification.
 
-## Step 2 — Investigate in Read-Only Mode
+## Step 2 — Resolve the Base Ref
+
+Resolve the base ref before ranking causes so regression expectations are tied to the right branch.
+
+1. If the developer provided a base ref, verify that it exists and use it.
+2. Otherwise, try this fallback chain in order:
+   - `upstream/main`
+   - `upstream/master`
+   - `origin/main`
+   - `origin/master`
+3. Store the first valid ref as `BASE_REF`.
+4. If none of the fallback refs exist, ask the developer which base ref to use before continuing.
+
+Use `BASE_REF` throughout investigation notes and regression verification.
+
+## Step 3 — Investigate in Read-Only Mode
 
 Investigate enough of the system to produce credible ranked causes.
 
@@ -54,7 +70,7 @@ Investigate enough of the system to produce credible ranked causes.
 
 Use repository conventions and fast local search tools such as `rg` when available. Keep notes concise; they will become the basis of `BUG_INVESTIGATION.md`.
 
-## Step 3 — Rank Likely Causes
+## Step 4 — Rank Likely Causes
 
 Assign each likely cause a probability ranking:
 
@@ -66,11 +82,28 @@ Assign each likely cause a probability ranking:
 | ⭐️⭐️ | Possible but weakly supported |
 | ⭐️ | Low-confidence fallback explanation |
 
+Assign each likely cause an evidence quality:
+
+| Quality | Meaning |
+|---------|---------|
+| `confirmed` | Reproduced directly, proven by a failing test, or established by logs or direct code-path evidence |
+| `observed` | Supported by concrete local observations, but not fully reproduced end to end |
+| `inferred` | Reasoned from code paths, data flow, or configuration when direct evidence is unavailable |
+| `speculative` | A weak fallback explanation that fits the symptom but lacks meaningful evidence |
+
+Do not use a high ranking with weak evidence quality. A `speculative` cause should usually be one or two stars. A five-star cause should normally be `confirmed`.
+
 Prefer fewer, stronger hypotheses over a long speculative list. Include at least one solution for every listed cause.
 
-## Step 4 — Write `BUG_INVESTIGATION.md`
+## Step 5 — Write `BUG_INVESTIGATION.md`
 
-Create or replace `BUG_INVESTIGATION.md` at the repository root with this structure:
+Before writing, check whether `BUG_INVESTIGATION.md` already exists at the repository root.
+
+- If it does not exist, create it.
+- If it exists and clearly belongs to this same investigation, update it.
+- If it exists and appears unrelated or you cannot tell, read it and ask the developer before replacing it.
+
+Write `BUG_INVESTIGATION.md` with this structure:
 
 ```markdown
 # Bug Investigation
@@ -81,23 +114,24 @@ Create or replace `BUG_INVESTIGATION.md` at the repository root with this struct
 
 ## Ranked Causes and Solutions
 
-| Description | Ranking | Solution |
-|-------------|---------|----------|
-| **1. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️⭐️⭐️ | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
-| **2. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️ | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
+| Description | Ranking | Quality | Solution |
+|-------------|---------|---------|----------|
+| **1. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️⭐️⭐️ | confirmed | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
+| **2. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️ | inferred | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
 ```
 
 Rules for the table:
 
-- Keep exactly three columns: `Description`, `Ranking`, and `Solution`.
+- Keep exactly four columns: `Description`, `Ranking`, `Quality`, and `Solution`.
 - Order rows from highest ranking to lowest ranking.
+- Use only these `Quality` values: `confirmed`, `observed`, `inferred`, or `speculative`.
 - Number each row inside the `Description` cell so the developer can select solutions by number.
 - Escape pipe characters in cell content.
 - Keep solutions detailed enough to implement without re-investigating from scratch.
 
 After writing the file, summarize the top candidates and explicitly wait for the developer to select one or more row numbers or describe a custom combination. Do not modify code yet.
 
-## Step 5 — Wait for Developer Selection
+## Step 6 — Wait for Developer Selection
 
 The developer may select one solution, multiple solutions, ask for edits to the investigation, or provide a custom direction.
 
@@ -106,7 +140,7 @@ The developer may select one solution, multiple solutions, ask for edits to the 
 - If they provide a custom direction, restate it and follow it if it is compatible with the evidence and safety boundaries.
 - If the selection is ambiguous, ask a concise clarifying question before editing code.
 
-## Step 6 — Implement the Selected Fixes
+## Step 7 — Implement the Selected Fixes
 
 Once the developer selects the solution or solutions:
 
@@ -118,22 +152,22 @@ Once the developer selects the solution or solutions:
 
 When multiple solutions are selected, apply them in dependency order and keep each change traceable to the selected row.
 
-## Step 7 — Verify the Regression Test
+## Step 8 — Verify the Regression Test
 
-Run the focused regression test on the fixed branch and confirm it passes. Then verify that the same test fails against `upstream/main`.
+Run the focused regression test on the fixed branch and confirm it passes. Then verify that the same test fails against `BASE_REF`.
 
-Preferred upstream verification process:
+Preferred base-ref verification process:
 
-1. Confirm `upstream/main` exists. If it does not exist, stop and ask whether to use another base branch.
-2. Create a temporary worktree from `upstream/main`.
+1. Confirm `BASE_REF` still exists.
+2. Create a temporary worktree from `BASE_REF`.
 3. Apply only the regression test changes, plus any required test fixture changes, to that worktree. Do not apply the production fix.
 4. Run the focused regression test in the temporary worktree and confirm it fails for the expected bug reason.
 5. Remove the temporary worktree.
 6. Run the focused test, and any relevant broader suite, on the fixed branch and confirm it passes.
 
-If upstream verification is impractical, explain exactly why and report the strongest available alternative evidence.
+If base-ref verification is impractical, document exactly why and report the strongest available alternative evidence, such as a focused reproduction command, logs, failing local output before the fix, or a code-path proof.
 
-## Step 8 — Final Summary
+## Step 9 — Final Summary
 
 After implementation and verification, report:
 
@@ -142,5 +176,6 @@ After implementation and verification, report:
 - The files changed.
 - The regression test added or updated.
 - The commands run and whether they passed.
-- Whether the regression test was confirmed to fail on `upstream/main`.
+- Which `BASE_REF` was used and whether the regression test was confirmed to fail there.
+- If base-ref verification was not completed, why it was impractical and what alternative evidence was used.
 - Any residual risks or follow-up recommendations.
