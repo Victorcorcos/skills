@@ -60,16 +60,16 @@ flowchart LR
     A[🗺️ planner] --> B[Coding]
     B --> C[✨ improver]
     B --> D[🧪 bdder]
-    B --> J[📈 coverager]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
-    J --> E[🌍 creator]
     E -->|if small| F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
     I[🔍 reviewer] -->|add comments + summary| F
+    F --> J[📈 coverager]
+    J --> F
     F --> H[🩹 fixer]
-    B --> K[🕵🏻‍♂️ investigador]
+    B --> K[🐛 bugkiller]
     K --> B
 
     style A fill:#2563EB,color:#fff
