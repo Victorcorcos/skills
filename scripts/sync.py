@@ -10,16 +10,20 @@ import shutil
 
 SKILLS: tuple[str, ...] = (
     "bdder",
+    "bugkiller",
     "breaker",
     "coverager",
     "creator",
     "filler",
     "fixer",
     "improver",
-    "investigator",
     "planner",
     "reviewer",
 )
+
+RENAMED_SKILLS: dict[str, str] = {
+    "investigator": "bugkiller",
+}
 
 
 def repo_root() -> Path:
@@ -52,7 +56,7 @@ def cleanup_legacy_claude_commands(
     legacy_dir = claude_out_dir.parent / "commands"
     if not legacy_dir.is_dir():
         return
-    for name in SKILLS:
+    for name in (*SKILLS, *RENAMED_SKILLS):
         legacy_file = legacy_dir / f"{name}.md"
         if not legacy_file.is_file():
             continue
@@ -61,6 +65,23 @@ def cleanup_legacy_claude_commands(
             print(f"Removed  (Claude legacy): {legacy_file}")
         else:
             print(f"Would remove (Claude legacy): {legacy_file}")
+
+
+def cleanup_renamed_skill_dirs(out_dir: Path, label: str, write: bool) -> None:
+    """Remove installed skill folders left over from known renames."""
+    for old_name, new_name in RENAMED_SKILLS.items():
+        stale_dir = out_dir / old_name
+        new_dir = out_dir / new_name
+        if not stale_dir.exists() or stale_dir == new_dir:
+            continue
+        if write:
+            if stale_dir.is_symlink() or stale_dir.is_file():
+                stale_dir.unlink()
+            else:
+                shutil.rmtree(stale_dir)
+            print(f"Removed  ({label} renamed skill): {stale_dir}")
+        else:
+            print(f"Would remove ({label} renamed skill): {stale_dir}")
 
 
 def sync(
@@ -100,6 +121,13 @@ def sync(
 
     if claude_out_dir:
         cleanup_legacy_claude_commands(claude_out_dir, write)
+    for label, out_dir in (
+        ("Claude", claude_out_dir),
+        ("Codex", codex_out_dir),
+        ("OpenCode", opencode_out_dir),
+    ):
+        if out_dir:
+            cleanup_renamed_skill_dirs(out_dir, label, write)
 
 
 def main() -> None:

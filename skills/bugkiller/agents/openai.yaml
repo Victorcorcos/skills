@@ -1,0 +1,6 @@
+interface:
+  display_name: "🐛 Bugkiller"
+  short_description: "Kill bugs with ranked evidence and tests."
+  default_prompt: "Use $bugkiller to investigate this bug, write BUG_INVESTIGATION.md with ranked causes and solutions, then wait for me to choose which fix to implement:"
+policy:
+  allow_implicit_invocation: false

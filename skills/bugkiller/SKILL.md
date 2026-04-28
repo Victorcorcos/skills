@@ -1,16 +1,16 @@
 ---
-name: investigator
-description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes with evidence quality, write BUG_INVESTIGATION.md with ranked problems and detailed solutions, wait for the user to select one or more solutions, then implement the selected fixes with regression tests. Use when invoked as /investigator or when asked to investigate and fix a bug through a ranked hypothesis document.'
+name: bugkiller
+description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes with evidence quality, write BUG_INVESTIGATION.md with ranked problems and detailed solutions, wait for the user to select one or more solutions, then implement the selected fixes with regression tests. Use when invoked as /bugkiller or when asked to investigate and fix a bug through a ranked hypothesis document.'
 ---
 
-# 🕵🏻‍♂️ Investigator
+# 🐛 Bugkiller
 
 > **Purpose**: Read a bug description, investigate the system for likely causes, write `BUG_INVESTIGATION.md` with ranked hypotheses, evidence quality, and detailed solutions, wait for the developer to choose one or more solutions, then implement the selected fix or fixes with an automated regression test.
 
 ## Usage
 
 ```text
-/investigator {{BUG DESCRIPTION}}
+/bugkiller {{BUG DESCRIPTION}}
 ```
 
 ## Required Inputs

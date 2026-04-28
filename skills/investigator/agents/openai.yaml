@@ -1,6 +1,0 @@
-interface:
-  display_name: "🕵🏻‍♂️ Investigator"
-  short_description: "Investigate bugs, rank causes by evidence quality, then fix selected solutions."
-  default_prompt: "Investigate this bug, write BUG_INVESTIGATION.md with ranked causes, evidence quality, and solutions, then wait for me to choose which fix to implement:"
-policy:
-  allow_implicit_invocation: false
