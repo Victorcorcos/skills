@@ -176,7 +176,9 @@ Use the creator skill to generate a PR title and description
 - ✨ **Improver** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
 - 🧪 **BDDer** — Analyzes changed tests and applies Behavior Driven Development improvements directly.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
+- 📋 **Filler** — Reads the current diff / branch and produces a well-structured PR title and description in `pull_request.md` for manual copy-paste, without creating the PR on GitHub.
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `branchlet` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
+- 📈 **Coverager** — Analyzes a SimpleCov HTML coverage report, identifies uncovered lines, and adds meaningful BDD-structured tests to reach full coverage without artificial test padding.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
 - 🐛 **Bugkiller** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions and evidence quality, waits for the developer to choose fixes, then implements them with regression tests that should fail on the resolved base ref and pass on the fixed branch.
 - 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
@@ -187,7 +189,7 @@ Use the creator skill to generate a PR title and description
 
 ```bash
 # 🗺️ Plan a new feature
-claude /planner
+claude /planner "Implement password reset emails with expiring tokens"
 
 # ✨ Review and auto-fix issues in one step
 claude /improver
@@ -195,17 +197,23 @@ claude /improver
 # 🧪 Write code, then improve tests
 claude /bdder
 
-# 🌍 Generate the PR description
-claude /creator
+# 🌍 Generate the PR description and open the PR (argument: branch to compare)
+claude /creator upstream/main
 
-# ✂️ If the PR is too large
-claude /breaker
+# 📋 Generate pull_request.md without opening a PR (argument: branch to compare)
+claude /filler upstream/main
 
-# 🩹 After receiving review feedback
-claude /fixer
+# ✂️ If the PR is too large (argument: maximum lines)
+claude /breaker 1000
+
+# 📈 Increase coverage from a SimpleCov report (argument: PATH to the coverage file)
+claude /coverager path/to/coverage/index.html
+
+# 🩹 After receiving review feedback (argument: PR number)
+claude /fixer 42
 
 # 🐛 Investigate and fix a bug
-claude /bugkiller "Describe the bug here"
+claude /bugkiller "Checkout fails when a saved card has expired"
 
 # 🔍 Review your own changes
 claude /reviewer
