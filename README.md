@@ -42,7 +42,7 @@ This repository supports:
 |-----|-------|---------|---------|--------|
 | 🗺️ | Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 |
 | ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
-| 🧪 | Tester | `/tester` | Improve tests to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
+| 🧪 | Tester | `/tester` | Refactor tests using BDD principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
 | 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
@@ -175,7 +175,7 @@ Use the creator skill to generate a PR title and description
 
 - 🗺️ **Planner** — Investigates the codebase, plans tasks in structured checkpoint-driven sections saved as `PLAN.md`, then executes section by section with human approval gates.
 - ✨ **Improver** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
-- 🧪 **BDDer** — Analyzes changed tests and applies Behavior Driven Development improvements directly.
+- 🧪 **Tester** — Refactors tests using Behavior Driven Development principles and improves them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - 📋 **Filler** — Reads the current diff / branch and produces a well-structured PR title and description in `pull_request.md` for manual copy-paste, without creating the PR on GitHub.
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `branchlet` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.

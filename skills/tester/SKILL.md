@@ -1,6 +1,6 @@
 ---
 name: tester
-description: 'Improve tests to be readable, meaningful, and real-world focused, avoiding unnecessary mocks. Use when asked to write, rewrite, or improve tests focusing on real user journeys and scenarios.'
+description: 'Refactor tests using Behavior Driven Development principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks. Use when asked to write, rewrite, or improve tests focusing on real user journeys and scenarios.'
 ---
 
 # 🧪 Tester
