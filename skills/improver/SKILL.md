@@ -105,7 +105,7 @@ This lets you discover the **actual patterns the codebase uses** — naming conv
 
 ### Align with the repository's BDD testing standard
 
-When tests are present or should be added, apply the same core BDD expectations used by the `bdder` skill:
+When tests are present or should be added, apply the same core testing expectations used by the `tester` skill:
 
 - `describe` blocks should describe scenarios or contexts such as `when`, `with`, `after`, `while`
 - `before`-style hooks should prepare the scenario, not contain assertions

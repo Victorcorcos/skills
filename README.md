@@ -42,7 +42,7 @@ This repository supports:
 |-----|-------|---------|---------|--------|
 | 🗺️ | Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 |
 | ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
-| 🧪 | BDDer | `/bdder` | Improve tests using Behavior Driven Development | 🟢 |
+| 🧪 | Tester | `/tester` | Improve tests to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
 | 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
@@ -59,7 +59,7 @@ This repository supports:
 flowchart LR
     A[🗺️ planner] --> B[Coding]
     B --> C[✨ improver]
-    B --> D[🧪 bdder]
+    B --> D[🧪 tester]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
     E -->|if small| F[Code Review]
@@ -155,7 +155,7 @@ claude
 # then invoke:
 /planner
 /creator
-/bdder
+/tester
 ```
 
 ### 🟣 OpenCode
@@ -196,7 +196,7 @@ claude /planner "Implement password reset emails with expiring tokens"
 claude /improver
 
 # 🧪 Write code, then improve tests
-claude /bdder
+claude /tester
 
 # 🌍 Generate the PR description and open the PR (argument: branch to compare)
 claude /creator upstream/main

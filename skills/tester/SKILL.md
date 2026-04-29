@@ -1,11 +1,11 @@
 ---
-name: bdder
-description: 'Analyze changed tests in the current branch and improve them using Behavior Driven Development principles. Use when asked to rewrite, restructure, or improve tests in a BDD style with readable, meaningful, and real-world focused test cases.'
+name: tester
+description: 'Improve tests to be readable, meaningful, and real-world focused, avoiding unnecessary mocks. Use when asked to write, rewrite, or improve tests focusing on real user journeys and scenarios.'
 ---
 
-# 🧪 BDDer
+# 🧪 Tester
 
-> **Purpose**: Analyze the current branch diff, find created/changed automated tests, and improve them using Behavior Driven Development principles — making tests readable, meaningful, and real-world focused.
+> **Purpose**: Analyze the current branch diff, find created/changed automated tests, and improve them to be readable, meaningful, and real-world focused — prioritizing real user journeys and scenarios over isolated method testing, and avoiding unnecessary mocks.
 
 ---
 

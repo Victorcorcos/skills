@@ -9,7 +9,7 @@ import shutil
 
 
 SKILLS: tuple[str, ...] = (
-    "bdder",
+    "tester",
     "bugkiller",
     "breaker",
     "coverager",
@@ -23,6 +23,7 @@ SKILLS: tuple[str, ...] = (
 
 RENAMED_SKILLS: dict[str, str] = {
     "investigator": "bugkiller",
+    "bdder": "tester",
 }
 
 
