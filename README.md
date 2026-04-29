@@ -69,6 +69,7 @@ flowchart LR
     F --> J[📈 coverager]
     J --> F
     F --> H[🩹 fixer]
+    H --> F
     B --> K[🐛 bugkiller]
     K --> B
 
