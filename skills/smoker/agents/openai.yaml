@@ -1,0 +1,6 @@
+interface:
+  display_name: "🚬 Smoker"
+  short_description: "Generate branch-specific smoke test steps."
+  default_prompt: "Use $smoker with a BASE_REF like upstream/main to generate SMOKE_TEST.md with manual test steps and any required setup."
+policy:
+  allow_implicit_invocation: false

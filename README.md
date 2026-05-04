@@ -43,6 +43,7 @@ This repository supports:
 | 🗺️ | Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 |
 | ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
 | 🧪 | Tester | `/tester` | Refactor tests using BDD principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
+| 🚬 | Smoker | `/smoker` | Generate `SMOKE_TEST.md` manual testing steps from the current branch diff | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
 | 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using branchlet worktrees | 🟢 |
@@ -60,8 +61,10 @@ flowchart LR
     A[🗺️ planner] --> B[Coding]
     B --> C[✨ improver]
     B --> D[🧪 tester]
+    B --> L[🚬 smoker]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
+    L --> E[🌍 creator]
     E -->|if small| F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
@@ -83,6 +86,7 @@ flowchart LR
     style I fill:#7C3AED,color:#fff
     style J fill:#16a34a,color:#fff
     style K fill:#0f766e,color:#fff
+    style L fill:#92400e,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 
@@ -176,6 +180,7 @@ Use the creator skill to generate a PR title and description
 - 🗺️ **Planner** — Investigates the codebase, plans tasks in structured checkpoint-driven sections saved as `PLAN.md`, then executes section by section with human approval gates.
 - ✨ **Improver** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
 - 🧪 **Tester** — Refactors tests using Behavior Driven Development principles and improves them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks.
+- 🚬 **Smoker** — Analyzes the current branch diff and writes a `SMOKE_TEST.md` file with branch-specific manual test steps, including prerequisite setup via `rails c` or API requests when needed.
 - 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
 - 📋 **Filler** — Reads the current diff / branch and produces a well-structured PR title and description in `pull_request.md` for manual copy-paste, without creating the PR on GitHub.
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `branchlet` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
@@ -197,6 +202,9 @@ claude /improver
 
 # 🧪 Write code, then improve tests
 claude /tester
+
+# 🚬 Generate a branch-specific smoke test guide (argument: base ref)
+claude /smoker upstream/main
 
 # 🌍 Generate the PR description and open the PR (argument: branch to compare)
 claude /creator upstream/main

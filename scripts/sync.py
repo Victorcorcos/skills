@@ -10,6 +10,7 @@ import shutil
 
 SKILLS: tuple[str, ...] = (
     "tester",
+    "smoker",
     "bugkiller",
     "breaker",
     "coverager",
