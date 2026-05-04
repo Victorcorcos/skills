@@ -74,7 +74,7 @@ flowchart LR
     F --> H[🩹 fixer]
     H --> F
     B --> K[🐛 bugkiller]
-    K --> B
+    K --> E
 
     style A fill:#2563EB,color:#fff
     style C fill:#D97706,color:#fff
