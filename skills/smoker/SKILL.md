@@ -81,6 +81,7 @@ If the repository is frontend-only, or the intended workflow clearly depends on 
 Rules:
 
 - Use project-appropriate requests via `curl`.
+- When a `curl` command returns JSON, append `| jq` so the response is formatted for easier manual verification in `SMOKE_TEST.md`.
 - Include placeholders for host, auth token, IDs, or environment values when needed.
 - Explain what data the request creates or modifies and why the tester needs it.
 - Do not assume direct database access when the project does not expose it.
@@ -128,6 +129,7 @@ Authoring rules:
 - Use numbered steps for every scenario.
 - Keep the instructions specific to this branch.
 - Pair each meaningful action with an explicit expected result.
+- If a test step uses `curl` and expects JSON output, include `| jq` at the end of the command.
 - Prefer UI language the tester will actually see in the product.
 - Mention routes, buttons, fields, filters, and record state only when they are grounded in the diff.
 - Keep the file concise, but complete enough that a different developer can run it without reverse-engineering the branch.
