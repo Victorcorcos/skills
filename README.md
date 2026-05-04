@@ -61,16 +61,16 @@ flowchart LR
     A[🗺️ planner] --> B[Coding]
     B --> C[✨ improver]
     B --> D[🧪 tester]
-    B --> L[🚬 smoker]
     C --> E[🌍 creator]
     D --> E[🌍 creator]
-    L --> E[🌍 creator]
     E -->|if small| F[Code Review]
     E -->|if large| G[✂️ breaker]
     G --> F
     I[🔍 reviewer] -->|add comments + summary| F
     F --> J[📈 coverager]
     J --> F
+    F --> L[🚬 smoker]
+    L --> F
     F --> H[🩹 fixer]
     H --> F
     B --> K[🐛 bugkiller]
