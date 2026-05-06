@@ -111,6 +111,14 @@ Run in `rails c`:
 
 Why this is needed: <short explanation>
 
+### 2. <api setup name>
+Run in your terminal:
+```bash
+# copy-pastable setup
+```
+
+Why this is needed: <short explanation>
+
 ## Test Steps
 
 ### Scenario 1 — <happy path>
@@ -130,6 +138,9 @@ Authoring rules:
 - Keep the instructions specific to this branch.
 - Pair each meaningful action with an explicit expected result.
 - If a test step uses `curl` and expects JSON output, include `| jq` at the end of the command.
+- Start every fenced code block in `SMOKE_TEST.md` at column 1 with no leading spaces before ```` ```ruby ```` or ```` ```bash ````.
+- Inside fenced code blocks, format commands with normal code indentation using two spaces where nested structure improves readability.
+- For heredocs and similar shell constructs, keep the opening and closing markers aligned with the command structure, and indent nested JSON or command content by two spaces when appropriate.
 - Prefer UI language the tester will actually see in the product.
 - Mention routes, buttons, fields, filters, and record state only when they are grounded in the diff.
 - Keep the file concise, but complete enough that a different developer can run it without reverse-engineering the branch.
