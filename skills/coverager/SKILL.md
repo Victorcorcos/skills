@@ -105,7 +105,13 @@ Scenario 2 — "<describe the user scenario>"
 [repeat for each file]
 ```
 
-Wait for the developer to approve or adjust the plan before proceeding.
+Wait for the developer to approve or adjust the plan before proceeding by using the `AskUserQuestion` tool with the options:
+1. Approve
+2. Reject (tell why)
+
+For the "Reject" option, add a field to let the developer write what is wrong with the plan. Then, after reviewing what the developer wrote, prepare a new Coverage Plan with the recommended option and present again to the developer. Then wait for the developer to approve/reject by using the `AskUserQuestion` tool again with the same options. Then repeat this process until the user Approve the plan, so you can go to next step.
+
+When the user approve the plan, go to next step.
 
 ---
 
