@@ -146,6 +146,111 @@ Authoring rules:
 - Keep the file concise, but complete enough that a different developer can run it without reverse-engineering the branch.
 - Do not add speculative scenarios that are not supported by the implementation.
 
+### Code Block Readability
+
+Code blocks must be readable by a human reviewer at first glance. Never inline complex payloads, chained queries, or multi-statement scripts as one-liners. Apply the following patterns whenever they fit.
+
+#### GraphQL requests via `curl`
+
+Do **not** embed the GraphQL operation as an escaped JSON string inside the `curl` body. Define the operation in a multi-line heredoc variable with a `GRAPHQL` delimiter, then build the JSON payload with `jq` and pipe it to `curl`. This preserves the natural indentation of the mutation/query and avoids escape-quote noise.
+
+Use the **quoted** delimiter `<<'GRAPHQL'` for static operations so `$`, backticks, and other shell metacharacters stay literal (important for things like passwords containing `$$` and mention syntax like `@[...]`/`@@[...]`):
+
+```bash
+CREATE_QUERY=$(cat <<'GRAPHQL'
+mutation {
+  createRecord(
+    data: {
+      sheetId: "<sheet_id>"
+      projectId: "<project_id>"
+      dynamicFields: {
+        rich_text: "<p>Tag @[<user_id>]</p>"
+      }
+    }
+  ) {
+    id
+    dynamicFields
+  }
+}
+GRAPHQL
+)
+CREATE_RESPONSE=$(jq -n --arg query "$CREATE_QUERY" '{query: $query}' | curl -s -X POST "http://localhost:3000/graphql" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $TOKEN" \
+  --data @-)
+echo "$CREATE_RESPONSE" | jq
+```
+
+Use the **unquoted** delimiter `<<GRAPHQL` only when the operation must interpolate a previously exported shell variable (for example `$SMOKE_RECORD_ID`):
+
+```bash
+UPDATE_QUERY=$(cat <<GRAPHQL
+mutation {
+  updateRecord(
+    id: "$SMOKE_RECORD_ID"
+    data: {
+      dynamicFields: {
+        rich_text: "<p>Tag @[<user_id>]</p>"
+      }
+    }
+  ) {
+    id
+    dynamicFields
+  }
+}
+GRAPHQL
+)
+UPDATE_RESPONSE=$(jq -n --arg query "$UPDATE_QUERY" '{query: $query}' | curl -s -X POST "http://localhost:3000/graphql" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $TOKEN" \
+  --data @-)
+echo "$UPDATE_RESPONSE" | jq
+```
+
+Rules for `curl`-based GraphQL blocks:
+
+- Always assign the operation to a `*_QUERY` variable using `cat <<'GRAPHQL' ... GRAPHQL` (quoted) by default.
+- Switch to the unquoted `<<GRAPHQL` delimiter **only** when shell interpolation of an exported variable is required, and explicitly state the interpolated variable in the surrounding step.
+- Always build the request body with `jq -n --arg query "$VAR" '{query: $query}'` instead of hand-escaping quotes.
+- Split `curl` flags across lines with `\` continuations: one flag per line for `-H "..."`, with `--data @-` on the last line.
+- Capture the response into a `*_RESPONSE` variable and pipe it through `| jq` on the next line so the tester can read the JSON output.
+
+#### Rails runner scripts
+
+Do **not** generate `bundle exec rails runner '...'` one-liners with semicolons stitching multiple statements. Use the stdin form with a `RUBY` heredoc so each statement and each step of a query chain is on its own line:
+
+```bash
+bundle exec rails runner - <<'RUBY'
+record_id = ENV.fetch("SMOKE_RECORD_ID")
+
+mentions = Mention
+  .where(record_id: record_id, origin: :text)
+  .order_by(column_id: :asc)
+  .pluck(:referenceable_type, :referenceable_id, :column_id)
+  .map { |type, referenceable_id, column_id| [type, referenceable_id.to_s, column_id.to_s] }
+
+puts mentions.inspect
+RUBY
+```
+
+Rules for `rails runner` blocks:
+
+- Always invoke as `bundle exec rails runner - <<'RUBY' ... RUBY` (quoted delimiter) so the script reads from stdin and `$` characters stay literal.
+- Fetch ENV vars first, on their own lines.
+- Break Mongoid/ActiveRecord query chains across `.where`, `.order_by`, `.pluck`, `.map`, etc., with each link starting on its own indented line under the receiver.
+- Assign the result to a named local (for example `mentions`, `summary`) and `puts` it on a separate final line. Do not inline `puts({ ... }.inspect)`.
+- When building a multi-key summary hash, declare the hash on its own block of lines before the `puts`.
+
+#### General one-liner avoidance
+
+Beyond GraphQL and `rails runner`, the same readability rule applies to any shell command that strings together multiple steps. If a command:
+
+- chains 3 or more pipeline stages with non-trivial logic, or
+- contains escaped quotes inside escaped quotes, or
+- mixes setup, action, and assertion in a single statement,
+
+then split it into a heredoc, a `*_QUERY`/`*_PAYLOAD` variable, or sequential lines so each step is independently readable. Prefer clarity over compactness in `SMOKE_TEST.md`.
+
 ---
 
 ## Step 5 — Review For Accuracy
