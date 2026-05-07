@@ -61,7 +61,7 @@ If not found, ask the developer. If skipped, omit the ticket from the title and 
 
 Use the project's `.github/pull_request_template.md` if it exists. Otherwise fall back to the template in this skill's `references/pull_request_template.md`.
 
-Fill in every section. Enhance with markdown features (code fences, tables, `<details>` blocks, etc.) where helpful.
+Fill in every section. Enhance with markdown features (code fences, tables, `<details>` blocks, mermaid charts (horizontally is better), etc.) where helpful.
 
 ---
 
@@ -73,6 +73,8 @@ Write numbered steps for a tester (not the developer): preconditions, concrete a
 
 ## Step 7 — Generate `pull_request.md`
 
-Create `pull_request.md` at the repository root with **only the PR body** (no title wrapper). Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved. Do not commit this file.
+Create `pull_request.md` at the repository root with **the PR body** and the suggested **PR title**. Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved.
 
-After writing the file, display the PR title and the full contents of `pull_request.md` so the user can review and copy-paste them into their PR.
+**IMPORTANT**) Do not commit this file.
+
+After writing the file, display the PR title, PR description and the full contents of `pull_request.md` so the user can review and copy-paste them into their PR.

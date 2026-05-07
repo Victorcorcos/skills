@@ -7,7 +7,8 @@ description: 'Analyze the current branch diff against an explicit `BASE_REF` and
 
 > **Purpose**: Analyze the current branch diff and generate a `SMOKE_TEST.md` file that helps a developer manually verify the feature or bugfix implemented on this branch.
 
-**Default mode**: Write `SMOKE_TEST.md` at the repository root. Do not commit it unless the user asks.
+**Default mode**: Write `SMOKE_TEST.md` at the repository root.
+**IMPORTANT**) Do not commit this file!
 
 **Read-only mode**: If the user explicitly asks for analysis only, provide the proposed smoke test plan without writing the file.
 
@@ -274,3 +275,4 @@ Write `SMOKE_TEST.md`, then show the user:
 - the provided `BASE_REF`
 - whether a `Pre-requisites` section was included
 - a short summary of the scenarios covered
+**IMPORTANT**) Do not commit this file!
