@@ -23,29 +23,29 @@ If the user provides an integer argument, use it as `MAX`. Otherwise default to 
 
 Before doing anything else, verify that the required tools are installed.
 
-### branchlet
+### wisetree
 
-`branchlet` is **required** to run this skill. It manages git worktrees in an organized sibling directory structure with support for copy/ignore patterns (e.g. ENV files).
+`wisetree` is **required** to run this skill. It manages git worktrees in an organized sibling directory structure with support for copy/ignore patterns (e.g. ENV files).
 
 ```bash
-command -v branchlet >/dev/null 2>&1 && echo "OK" || echo "MISSING"
+command -v wisetree >/dev/null 2>&1 && echo "OK" || echo "MISSING"
 ```
 
-If `branchlet` is **MISSING**, stop immediately and ask the developer:
+If `wisetree` is **MISSING**, stop immediately and ask the developer:
 
-> "`branchlet` is not installed. It is required by the breaker skill to create organized worktrees for each child PR. Would you like me to install it now?"
+> "`wisetree` is not installed. It is required by the breaker skill to create organized worktrees for each child PR. Would you like me to install it now?"
 
 Use the `AskUserQuestion` tool with:
 
-1. `label: "Install branchlet"`, `description: "Run npm install -g branchlet and continue"`
+1. `label: "Install wisetree"`, `description: "Run npm install -g wisetree and continue"`
 2. `label: "Cancel"`, `description: "Stop the breaker skill without making any changes"`
 
 Set `header` to `"Missing dependency"` and `multiSelect` to `false`.
 
-- **Install branchlet**: Run `npm install -g branchlet`, then verify the installation succeeded:
+- **Install wisetree**: Run `npm install -g wisetree`, then verify the installation succeeded:
 
 ```bash
-command -v branchlet >/dev/null 2>&1 && echo "OK" || echo "FAILED"
+command -v wisetree >/dev/null 2>&1 && echo "OK" || echo "FAILED"
 ```
 
 If `OK`, restart the skill from the beginning. If `FAILED`, report the error and stop.
@@ -198,13 +198,13 @@ Mother branch: `feature/digit-3121-offline-maps` (+512 -1000)
 
 Use `BREAKER_PLAN.md` throughout the rest of the workflow to track which child PRs have been created and opened. Update the `Status` column to `done` as each child PR is opened.
 
-#### 4. Create worktrees with branchlet
+#### 4. Create worktrees with wisetree
 
-**Use `branchlet` to create worktrees instead of switching branches.** Each child gets its own working directory with ENV files properly copied — no `git checkout`, no stashing, no risk of cross-contamination.
+**Use `wisetree` to create worktrees instead of switching branches.** Each child gets its own working directory with ENV files properly copied — no `git checkout`, no stashing, no risk of cross-contamination.
 
 ##### Worktree directory structure
 
-`branchlet` creates worktrees in a sibling directory named `{{DIRECTORY_NAME}}.worktree/`. Each worktree inside is named after its branch.
+`wisetree` creates worktrees in a sibling directory named `{{DIRECTORY_NAME}}.worktree/`. Each worktree inside is named after its branch.
 
 Example — if the skill is invoked inside `/status-survey` with three child branches:
 
@@ -226,7 +226,7 @@ BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master"
 CHILD_BRANCH="digit3121_offline_maps.add_backend"  # just an example, please adjust per child
 
 # 1. Create the worktree from the base branch and attach it to the child branch
-branchlet create -n "$CHILD_BRANCH" -s "$BASE_SHORT" -b "$CHILD_BRANCH"
+wisetree create -n "$CHILD_BRANCH" -s "$BASE_SHORT" -b "$CHILD_BRANCH"
 
 # 2. Enter the worktree
 cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
