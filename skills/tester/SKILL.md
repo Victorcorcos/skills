@@ -97,7 +97,14 @@ For each changed test file, analyze:
 
 ## Step 4 — Apply BDD Structure
 
-Restructure and improve each test file following these rules:
+Restructure and improve each test file following these rules inspired in Behavior Driven Development:
+
+**IMPORTANT**) Try to find the equivalents of it for your test suite in case these blocks doesn't exist with these names.
+For example, for flutter with dart we have these equivalents:
+- `describe()` maps to `group()`
+- `before(:each)` maps to `setUp()`
+- `before(:all)` maps to `setUpAll()`
+- `it()` maps to `test()` or `testWidgets()`
 
 ### `describe()` blocks — Describe scenarios
 
