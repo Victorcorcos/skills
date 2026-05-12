@@ -1,11 +1,21 @@
 ---
 name: tester
-description: 'Refactor tests using Behavior Driven Development principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks. Use when asked to write, rewrite, or improve tests focusing on real user journeys and scenarios.'
+description: 'Refactor tests using Behavior Driven Development principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks. Requires an explicit `BASE_REF` to diff against. Use when asked to write, rewrite, or improve tests focusing on real user journeys and scenarios.'
 ---
 
 # 🧪 Tester
 
 > **Purpose**: Analyze the current branch diff, find created/changed automated tests, and improve them to be readable, meaningful, and real-world focused — prioritizing real user journeys and scenarios over isolated method testing, and avoiding unnecessary mocks.
+
+---
+
+## Input
+
+| Parameter  | Required | Default | Description |
+|------------|----------|---------|-------------|
+| `BASE_REF` | Yes      | —       | Base ref to diff against. In slash-style environments, pass it as the first argument: `/tester upstream/main`. |
+
+If the user does not provide `BASE_REF`, stop and ask for it.
 
 ---
 
@@ -29,37 +39,7 @@ Favor real-world interactions over mocks and stubs. **Avoid mocking our own clas
 
 ## Step 1 — Resolve Diff Base
 
-Before resolving the diff base, ensure git references are up-to-date.
-
-### Prerequisites
-
-First, update all remote references to ensure they match the latest state:
-
-```bash
-git fetch --all --prune
-```
-
-This command:
-- Fetches updates from all remotes (`upstream` and `origin`)
-- Removes local references to deleted remote branches (`--prune`)
-- Ensures the fallback chain below finds valid, current references
-
-**Important**: Without this step, the branch resolution may fail if the local git database is stale.
-
-### Resolve the diff base
-
-Resolve the diff base using the same fallback chain as other skills:
-
-```bash
-BASE_REF=""
-for ref in upstream/main upstream/master origin/main origin/master; do
-  git rev-parse --verify --quiet "$ref" >/dev/null && BASE_REF="$ref" && break
-done
-
-test -n "$BASE_REF" && echo "$BASE_REF"
-```
-
-Store whichever works as `BASE_REF` and use it throughout.
+Use the provided `BASE_REF` throughout the workflow. Do not discover it automatically.
 
 ---
 

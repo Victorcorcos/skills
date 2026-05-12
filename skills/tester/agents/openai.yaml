@@ -1,6 +1,6 @@
 interface:
   display_name: "🧪 Tester"
-  short_description: "Refactor tests using BDD principles to be readable, meaningful, and real-world focused."
-  default_prompt: "Analyze the changed tests in this branch and refactor them using Behavior Driven Development principles — making them readable, meaningful, and real-world focused, focusing on real user journeys and scenarios, and avoiding unnecessary mocks."
+  short_description: "Refactor changed tests using BDD principles against an explicit BASE_REF to be readable, meaningful, and real-world focused."
+  default_prompt: "Analyze the changed tests in this branch against the provided BASE_REF and refactor them using Behavior Driven Development principles to be readable, meaningful, and real-world focused, focusing on real user journeys and scenarios, and avoiding unnecessary mocks."
 policy:
   allow_implicit_invocation: false
