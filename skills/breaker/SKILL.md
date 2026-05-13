@@ -27,6 +27,8 @@ Before doing anything else, verify that the required tools are installed.
 
 `wisetree` is **required** to run this skill. It manages git worktrees in an organized sibling directory structure with support for copy/ignore patterns (e.g. ENV files).
 
+Main repository: https://github.com/victorcorcos/wisetree
+
 ```bash
 command -v wisetree >/dev/null 2>&1 && echo "OK" || echo "MISSING"
 ```
