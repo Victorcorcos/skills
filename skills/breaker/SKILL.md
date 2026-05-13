@@ -179,9 +179,9 @@ Mother branch: `feature/digit-3121-offline-maps` (+512 -1000)
 
 | #  | Branch | Description | +Added | -Subtracted | Status |
 |----|--------|-------------|--------|-------------|--------|
-| 1  | `digit3121_offline_maps.add_backend` | Add backend layer with persistence, model and controller | +412 | -500 | pending |
-| 2  | `digit3121_offline_maps.add_frontend` | Add frontend layer with design, layout and proper API requests | +100 | -250 | pending |
-| 3  | `digit3121_offline_maps.improver_usability` | Improve the usability of related files, following Boy Scout Rule | +0 | -250 | pending |
+| 1  | `digit3121_offline_maps.1_add_backend` | Add backend layer with persistence, model and controller | +412 | -500 | pending |
+| 2  | `digit3121_offline_maps.2_add_frontend` | Add frontend layer with design, layout and proper API requests | +100 | -250 | pending |
+| 3  | `digit3121_offline_maps.3_improver_usability` | Improve the usability of related files, following Boy Scout Rule | +0 | -250 | pending |
 
 ## Integrity
 
@@ -209,10 +209,10 @@ Use `BREAKER_PLAN.md` throughout the rest of the workflow to track which child P
 Example — if the skill is invoked inside `/status-survey` with three child branches:
 
 ```
-/status-survey/                                                    ← mother branch (untouched)
-/status-survey.worktree/digit3121_offline_maps.add_backend/        ← child worktree 1
-/status-survey.worktree/digit3121_offline_maps.add_frontend/       ← child worktree 2
-/status-survey.worktree/digit3121_offline_maps.improver_usability/ ← child worktree 3
+/status-survey/                                                      ← mother branch (untouched)
+/status-survey.worktree/digit3121_offline_maps.1_add_backend/        ← child worktree 1
+/status-survey.worktree/digit3121_offline_maps.2_add_frontend/       ← child worktree 2
+/status-survey.worktree/digit3121_offline_maps.3_improver_usability/ ← child worktree 3
 ```
 
 ##### Create each worktree
@@ -223,7 +223,7 @@ For each child PR in `BREAKER_PLAN.md`, resolve the base branch short name and r
 REPO_DIR="$(pwd)"
 REPO_NAME="$(basename "$REPO_DIR")"
 BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master"
-CHILD_BRANCH="digit3121_offline_maps.add_backend"  # just an example, please adjust per child
+CHILD_BRANCH="digit3121_offline_maps.1_add_backend"  # just an example — child branches MUST follow `<mother>.<N>_<description>` where N is the 1-based child index
 
 # 1. Create the worktree from the base branch and attach it to the child branch
 wisetree create -n "$CHILD_BRANCH" -s "$BASE_SHORT" -b "$CHILD_BRANCH"
@@ -288,13 +288,26 @@ Update `BREAKER_PLAN.md` with the actual verified counts if they differ from the
 
 #### 7. Branch naming
 
-Use descriptive names that reflect each PR's responsibility. The branch name doubles as the worktree directory name:
+Child branches **must** follow the pattern `<mother-branch>.<N>_<description>`, where `N` is the 1-based index of the child within the split plan and `<description>` is a short snake_case summary of that PR's responsibility. The branch name doubles as the worktree directory name.
+
+For example, if the mother branch is `digit3347_create_mention_sidepanel`, the children must be named:
 
 ```
-<original-branch>.add_backend        → worktree at <repo>.worktree/<original-branch>.add_backend/
-<original-branch>.add_frontend       → worktree at <repo>.worktree/<original-branch>.add_frontend/
-<original-branch>.improver_usability → worktree at <repo>.worktree/<original-branch>.improver_usability/
+digit3347_create_mention_sidepanel.1_child1_description
+digit3347_create_mention_sidepanel.2_child2_description
+digit3347_create_mention_sidepanel.3_child3_description
+digit3347_create_mention_sidepanel.4_child4_description
 ```
+
+Concrete naming examples mapped to their worktree paths:
+
+```
+<original-branch>.1_add_backend        → worktree at <repo>.worktree/<original-branch>.1_add_backend/
+<original-branch>.2_add_frontend       → worktree at <repo>.worktree/<original-branch>.2_add_frontend/
+<original-branch>.3_improver_usability → worktree at <repo>.worktree/<original-branch>.3_improver_usability/
+```
+
+The numeric prefix after the `.` is mandatory — it preserves the order of the split and makes child PRs easy to scan against `BREAKER_PLAN.md`.
 
 ---
 
