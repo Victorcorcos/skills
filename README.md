@@ -60,6 +60,8 @@ This repository supports:
 ```mermaid
 flowchart LR
     A[🗺️ planner] --> B[Coding]
+    B --> M[🔀 merger]
+    M --> B
     B --> C[✨ improver]
     B --> D[🧪 tester]
     C --> E[🌍 creator]
@@ -76,8 +78,6 @@ flowchart LR
     H --> F
     B --> K[🐛 bugkiller]
     K --> E
-    B --> M[🔀 merger]
-    M --> B
 
     style A fill:#2563EB,color:#fff
     style C fill:#D97706,color:#fff
