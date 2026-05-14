@@ -63,7 +63,9 @@ Write numbered steps for a tester (not the developer): preconditions, concrete a
 
 ## Step 6 — Generate `pull_request.md`
 
-Create `pull_request.md` at the repository root with **the PR body** and the suggested **PR title**. Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved.
+Create `pull_request.md` at the repository root.
+The first line of it should contain the suggested **PR title**.
+All the next lines of it should contain the **PR body** using the pull_request_template.md pattern. Start with the first template section (e.g. `# Description ✍️`). Include the `# Ticket 🎫` section only if a ticket was resolved.
 
 **IMPORTANT**) Do not commit this file.
 
