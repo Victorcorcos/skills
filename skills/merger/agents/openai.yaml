@@ -1,0 +1,6 @@
+interface:
+  display_name: "🔀 Merger"
+  short_description: "Fetch and merge a remote branch into the current branch, resolving conflicts safely."
+  default_prompt: "Fetch the remote and merge the given ref into the current branch, then resolve any conflicts without breaking code."
+policy:
+  allow_implicit_invocation: false

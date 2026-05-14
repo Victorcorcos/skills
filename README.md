@@ -51,6 +51,7 @@ This repository supports:
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
 | 🐛 | Bugkiller | `/bugkiller` | Investigate a bug, write ranked causes, evidence quality, and solutions to `BUG_INVESTIGATION.md`, then fix selected solutions with regression tests | 🟢 |
 | 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
+| 🔀 | Merger | `/merger <remote/branch>` | Fetch and merge a remote branch into the current branch, resolving conflicts without breaking code | 🟢 |
 
 ---
 
@@ -75,6 +76,8 @@ flowchart LR
     H --> F
     B --> K[🐛 bugkiller]
     K --> E
+    B --> M[🔀 merger]
+    M --> B
 
     style A fill:#2563EB,color:#fff
     style C fill:#D97706,color:#fff
@@ -87,6 +90,7 @@ flowchart LR
     style J fill:#16a34a,color:#fff
     style K fill:#0f766e,color:#fff
     style L fill:#92400e,color:#fff
+    style M fill:#0369a1,color:#fff
     style B fill:#1e293b,color:#fff
 ```
 
@@ -188,6 +192,7 @@ Use the creator skill to generate a PR title and description
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
 - 🐛 **Bugkiller** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions and evidence quality, waits for the developer to choose fixes, then implements them with regression tests that should fail on the resolved base ref and pass on the fixed branch.
 - 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
+- 🔀 **Merger** — Fetches a remote and merges its branch into the current branch (e.g. `upstream/main`), then resolves any conflicts by preserving the intent of both sides — without using `--ours`/`--theirs` shortcuts and without introducing bugs.
 
 ---
 
@@ -226,6 +231,9 @@ claude /bugkiller "Checkout fails when a saved card has expired"
 
 # 🔍 Review your own changes
 claude /reviewer
+
+# 🔀 Merge a remote branch into the current branch (argument: <remote>/<branch>)
+claude /merger upstream/main
 ```
 
 ---

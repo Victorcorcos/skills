@@ -18,6 +18,7 @@ SKILLS: tuple[str, ...] = (
     "filler",
     "fixer",
     "improver",
+    "merger",
     "planner",
     "reviewer",
 )
