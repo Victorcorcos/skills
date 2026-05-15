@@ -61,6 +61,26 @@ Store the resolved PR number as `PR_NUMBER` and use it throughout.
 
 ---
 
+## Step 0.5 — Sync Local Branch With Remote
+
+Sync first so the final `git push` doesn't fail and leave reviewer replies pointing at commit hashes that never reached the remote.
+
+If the current branch is not the PR's head branch, check it out:
+
+```bash
+gh pr checkout "$PR_NUMBER"
+```
+
+Pull any new remote commits into the local branch:
+
+```bash
+git pull --rebase origin HEAD
+```
+
+If the rebase fails, stop and report the error.
+
+---
+
 ## Step 1 — Gather PR Context
 
 Collect three pieces of context in parallel:
