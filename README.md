@@ -42,16 +42,16 @@ This repository supports:
 |-----|-------|---------|---------|--------|
 | 🗺️ | Planner | `/planner` | Plan tasks in sections, execute with approval gates | 🟢 |
 | ✨ | Improver | `/improver` | Review code and tests, then fix all found issues directly | 🟢 |
-| 🧪 | Tester | `/tester <base-ref>` | Refactor tests using BDD principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
+| 🧪 | Tester | `/tester` | Refactor tests using BDD principles and improve them to be readable, meaningful, and real-world focused, avoiding unnecessary mocks | 🟢 |
 | 🚬 | Smoker | `/smoker` | Generate `SMOKE_TEST.md` manual testing steps from the current branch diff | 🟢 |
-| 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs | 🟢 |
+| 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs and open the PR on GitHub | 🟢 |
 | 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using wisetree worktrees | 🟢 |
 | 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
 | 🐛 | Bugkiller | `/bugkiller` | Investigate a bug, write ranked causes, evidence quality, and solutions to `BUG_INVESTIGATION.md`, then fix selected solutions with regression tests | 🟢 |
 | 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
-| 🔀 | Merger | `/merger <remote/branch>` | Fetch and merge a remote branch into the current branch, resolving conflicts without breaking code | 🟢 |
+| 🔀 | Merger | `/merger` | Fetch and merge a remote branch into the current branch, resolving conflicts without breaking code | 🟢 |
 
 ---
 
@@ -185,7 +185,7 @@ Use the creator skill to generate a PR title and description
 - ✨ **Improver** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — proposing fixes with diffs and applying them upon approval.
 - 🧪 **Tester** — Refactors tests using Behavior Driven Development principles against an explicit `BASE_REF`, improving them to be readable, meaningful, and real-world focused while avoiding unnecessary mocks.
 - 🚬 **Smoker** — Analyzes the current branch diff and writes a `SMOKE_TEST.md` file with branch-specific manual test steps, including prerequisite setup via `rails c` or API requests when needed.
-- 🌍 **Creator** — Reads the current diff / branch and produces a well-structured PR title and description following your team's template.
+- 🌍 **Creator** — Reads the current diff / branch, produces a well-structured PR title and description following your team's template, and opens the PR on GitHub.
 - 📋 **Filler** — Reads the current diff / branch and produces a well-structured PR title and description in `pull_request.md` for manual copy-paste, without creating the PR on GitHub.
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `wisetree` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
 - 📈 **Coverager** — Analyzes a SimpleCov HTML coverage report, identifies uncovered lines, and adds meaningful BDD-structured tests to reach full coverage without artificial test padding.
