@@ -63,21 +63,21 @@ Store the resolved PR number as `PR_NUMBER` and use it throughout.
 
 ## Step 0.5 — Sync Local Branch With Remote
 
-Sync first so the final `git push` doesn't fail and leave reviewer replies pointing at commit hashes that never reached the remote.
+Sync the local branch with the latest commits from the PR head branch before applying review fixes. This ensures fixes are based on the newest PR state and the final `git push` updates the same branch reviewers are commenting on.
 
-If the current branch is not the PR's head branch, check it out:
+Check out the PR branch:
 
 ```bash
 gh pr checkout "$PR_NUMBER"
 ```
 
-Pull any new remote commits into the local branch:
+Update the local branch from its configured upstream using a fast-forward-only pull:
 
 ```bash
-git pull --rebase origin HEAD
+git pull --ff-only
 ```
 
-If the rebase fails, stop and report the error.
+If git pull --ff-only fails, stop and report the error. Do not rebase or merge automatically. The developer must decide how to handle the divergence before review fixes are applied.
 
 ---
 
