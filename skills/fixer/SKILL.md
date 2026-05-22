@@ -229,7 +229,7 @@ gh api "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments/{comment_id}/replies" \
 ```
 
 Build the reply values as follows:
-- `COMMIT_URL`: construct from the PR URL — `https://github.com/{owner}/{repo}/pull/$PR_NUMBER/commits/FULL_HASH` (use `git rev-parse HEAD` for the full hash).
+- `COMMIT_URL`: construct from the PR URL — `https://github.com/{owner}/{repo}/pull/$PR_NUMBER/changes/FULL_HASH` (use `git rev-parse HEAD` for the full hash).
 - `{comment_id}`: the numeric ID of the review comment being addressed.
 
 **Example commit:**
@@ -243,7 +243,7 @@ Replaced the inline 3000 ms literal with a RETRY_DELAY_MS constant to improve re
 
 **Example reply posted to GitHub:**
 
-> Addressed in https://github.com/acme/repo/pull/42/commits/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 — Extracted magic number into RETRY_DELAY_MS constant. Thanks for the feedback!
+> Addressed in https://github.com/acme/repo/pull/42/changes/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 — Extracted magic number into RETRY_DELAY_MS constant. Thanks for the feedback!
 
 Do NOT squash multiple fixes into one commit. Each resolved comment gets its own commit and its own reply. Do NOT defer replies to a later step — reply immediately after each commit.
 
