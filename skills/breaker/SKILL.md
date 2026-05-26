@@ -204,6 +204,11 @@ Use `BREAKER_PLAN.md` throughout the rest of the workflow to track which child P
 
 **Use `wisetree` to create worktrees instead of switching branches.** Each child gets its own working directory with ENV files properly copied — no `git checkout`, no stashing, no risk of cross-contamination.
 
+> [!CAUTION]
+> **EVERY child branch MUST be created from `$BASE_REF` (e.g. `upstream/main`, `origin/master`) — NEVER from another child branch, NEVER from the mother branch, NEVER from `HEAD`, and NEVER from the previous worktree's directory.**
+>
+> The source of every `wisetree create` call must be the short name of `$BASE_REF` (e.g. `main` or `master`). All children are **siblings** rooted at the same base — they are not chained or stacked.
+
 ##### Worktree directory structure
 
 `wisetree` creates worktrees in a sibling directory named `{{DIRECTORY_NAME}}.worktree/`. Each worktree inside is named after its branch.
@@ -212,32 +217,42 @@ Example — if the skill is invoked inside `/status-survey` with three child bra
 
 ```
 /status-survey/                                                      ← mother branch (untouched)
-/status-survey.worktree/digit3121_offline_maps.1_add_backend/        ← child worktree 1
-/status-survey.worktree/digit3121_offline_maps.2_add_frontend/       ← child worktree 2
-/status-survey.worktree/digit3121_offline_maps.3_improver_usability/ ← child worktree 3
+/status-survey.worktree/digit3121_offline_maps.1_add_backend/        ← child worktree 1  (forked from BASE_REF)
+/status-survey.worktree/digit3121_offline_maps.2_add_frontend/       ← child worktree 2  (forked from BASE_REF)
+/status-survey.worktree/digit3121_offline_maps.3_improver_usability/ ← child worktree 3  (forked from BASE_REF)
 ```
+
+All three children share the **same starting commit** — the tip of `$BASE_REF`. None of them is a descendant of another.
 
 ##### Create each worktree
 
-For each child PR in `BREAKER_PLAN.md`, resolve the base branch short name and run these 3 steps:
+For each child PR in `BREAKER_PLAN.md`, resolve `BASE_SHORT` **once** before the loop and reuse it. Then run these 4 steps from inside the mother repository directory (`$REPO_DIR`) for every child — never from inside another child's worktree:
 
 ```bash
-REPO_DIR="$(pwd)"
+REPO_DIR="$(pwd)"                                 # mother repository directory — anchor for the whole loop
 REPO_NAME="$(basename "$REPO_DIR")"
-BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master"
-CHILD_BRANCH="digit3121_offline_maps.1_add_backend"  # just an example — child branches MUST follow `<mother>.<N>_<description>` where N is the 1-based child index
+BASE_SHORT="$(echo "$BASE_REF" | sed 's|.*/||')"  # e.g. "main" or "master" — the ONLY allowed source for every child
+CHILD_BRANCH="digit3121_offline_maps.1_add_backend"  # example — child branches MUST follow `<mother>.<N>_<description>` where N is the 1-based child index
 
-# 1. Create the worktree from the base branch and attach it to the child branch
+# 0. Sanity-check: you MUST be in the mother repo directory, not inside a previously-created child worktree.
+[ "$(pwd)" = "$REPO_DIR" ] || { echo "ERROR: not in mother repo dir"; exit 1; }
+
+# 1. Create the worktree from $BASE_SHORT (the mother/BASE_REF) — never from another child branch.
+#    -s "$BASE_SHORT"  →  source MUST be the BASE_REF short name. Do NOT pass HEAD, the mother branch, or a previous child branch.
 wisetree create -n "$CHILD_BRANCH" -s "$BASE_SHORT" -b "$CHILD_BRANCH"
 
-# 2. Enter the worktree
+# 2. Verify the new child branch is rooted at $BASE_REF and has zero commits ahead of it before any work is applied.
+git -C "../$REPO_NAME.worktree/$CHILD_BRANCH" rev-list --count "$BASE_REF..HEAD"  # MUST print 0
+git -C "../$REPO_NAME.worktree/$CHILD_BRANCH" merge-base --is-ancestor "$BASE_REF" HEAD && echo "OK: rooted at $BASE_REF" || { echo "ERROR: child is not rooted at $BASE_REF"; exit 1; }
+
+# 3. Enter the worktree to populate it (next sub-section).
 cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
 
-# 3. Return to the mother directory
+# 4. Return to the mother directory before starting the next child.
 cd "$REPO_DIR"
 ```
 
-These 3 steps are **mandatory for every child worktree**.
+These 4 steps are **mandatory for every child worktree**. The `cd "$REPO_DIR"` at the end is non-negotiable — the next iteration of the loop must always start from the mother repo directory so that the next `wisetree create` resolves `$BASE_SHORT` against the mother's git context, not a child's.
 
 ##### Populate each worktree
 
@@ -262,13 +277,43 @@ Do **not** remove worktrees after opening PRs. The developer will continue worki
 - **Independent**: every PR must build, pass tests, and be mergeable on its own — no PR depends on another PR in the split
 - **Self-sufficient**: each PR contains both the implementation **and** all related automated tests for that implementation
 - **Single responsibility**: each PR has one clear purpose described in its title
-- **All target `$BASE_REF`**: every child branch is created from `$BASE_REF` and its PR targets `$BASE_REF`
+- **All forked from `$BASE_REF`**: every child branch is created from `$BASE_REF` (the resolved upstream trunk, e.g. `upstream/main`) and its PR targets `$BASE_REF`. Never fork a child from another child, from the mother branch, or from `HEAD` — children are siblings of each other, never a chain
 - **Within MAX**: every child PR must be ≤ MAX lines
-- **Isolated worktree**: each child lives in its own worktree directory — never switch branches in the mother directory
+- **Isolated worktree**: each child lives in its own worktree directory — never switch branches in the mother directory, and always run `wisetree create` from the mother repo directory (`$REPO_DIR`), never from inside another child's worktree
 
 #### 6. Integrity verification (mandatory)
 
-After populating all worktrees, verify that the actual line counts match the plan in `BREAKER_PLAN.md`. For each child worktree, run:
+After populating all worktrees, verify both **lineage** (children must be forked from `$BASE_REF`, not from each other) and **line counts** (children must perfectly partition the mother).
+
+##### 6a. Lineage check — every child must be forked from `$BASE_REF`
+
+For each child worktree, the merge-base with `$BASE_REF` must equal the tip of `$BASE_REF` itself. If it equals another child's commit instead, the child was incorrectly forked from that child and the split is broken.
+
+```bash
+BASE_SHA="$(git -C "$REPO_DIR" rev-parse "$BASE_REF")"
+
+for CHILD_BRANCH in <list every child branch from BREAKER_PLAN.md>; do
+  CHILD_DIR="../$REPO_NAME.worktree/$CHILD_BRANCH"
+  MB="$(git -C "$CHILD_DIR" merge-base HEAD "$BASE_REF")"
+  if [ "$MB" = "$BASE_SHA" ]; then
+    echo "OK   $CHILD_BRANCH  forked from $BASE_REF"
+  else
+    echo "FAIL $CHILD_BRANCH  forked from $MB (expected $BASE_SHA)"
+  fi
+done
+```
+
+Every child must print `OK`. If any child prints `FAIL`, **delete that child's worktree and branch and recreate it from `$BASE_REF`** before continuing:
+
+```bash
+wisetree remove -n "$CHILD_BRANCH"
+git -C "$REPO_DIR" branch -D "$CHILD_BRANCH"
+# then re-run the step 4 worktree-creation block for this child, ensuring you are in $REPO_DIR
+```
+
+##### 6b. Line-count check — children must partition the mother
+
+For each child worktree, run:
 
 ```bash
 cd "../$REPO_NAME.worktree/$CHILD_BRANCH"
