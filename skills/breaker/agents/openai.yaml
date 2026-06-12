@@ -1,6 +1,6 @@
 interface:
   display_name: "✂️ Breaker"
-  short_description: "Open a PR with size-limit checks; splits oversized diffs into independent SRP-based branches"
+  short_description: "Open a PR with size-limit checks; splits oversized diffs into independent branches from the base ref"
   default_prompt: "$breaker 1000"
 policy:
   allow_implicit_invocation: false

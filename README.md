@@ -46,7 +46,7 @@ This repository supports:
 | 🚬 | Smoker | `/smoker` | Generate `SMOKE_TEST.md` manual testing steps from the current branch diff | 🟢 |
 | 🌍 | Creator | `/creator` | Generate PR descriptions & titles from diffs and open the PR on GitHub | 🟢 |
 | 📋 | Filler | `/filler` | Generate PR descriptions & titles from diffs and output `pull_request.md` for copy-paste (no PR creation) | 🟢 |
-| ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units using wisetree worktrees | 🟢 |
+| ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units created from the base ref using wisetree worktrees | 🟢 |
 | 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
 | 🐛 | Bugkiller | `/bugkiller` | Investigate a bug, write ranked causes, evidence quality, and solutions to `BUG_INVESTIGATION.md`, then fix selected solutions with regression tests | 🟢 |
@@ -187,7 +187,7 @@ Use the creator skill to generate a PR title and description
 - 🚬 **Smoker** — Analyzes the current branch diff and writes a `SMOKE_TEST.md` file with branch-specific manual test steps, including prerequisite setup via `rails c` or API requests when needed.
 - 🌍 **Creator** — Reads the current diff / branch, produces a well-structured PR title and description following your team's template, and opens the PR on GitHub.
 - 📋 **Filler** — Reads the current diff / branch and produces a well-structured PR title and description in `pull_request.md` for manual copy-paste, without creating the PR on GitHub.
-- ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `wisetree` worktrees — each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
+- ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `wisetree` worktrees — each child branch is created from the base ref, each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
 - 📈 **Coverager** — Analyzes a SimpleCov HTML coverage report, identifies uncovered lines, and adds meaningful BDD-structured tests to reach full coverage without artificial test padding.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
 - 🐛 **Bugkiller** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions and evidence quality, waits for the developer to choose fixes, then implements them with regression tests that should fail on the resolved base ref and pass on the fixed branch.
