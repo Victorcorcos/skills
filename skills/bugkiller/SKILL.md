@@ -1,11 +1,11 @@
 ---
 name: bugkiller
-description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes with evidence quality, write BUG_INVESTIGATION.md with ranked problems and detailed solutions, wait for the user to select one or more solutions, then implement the selected fixes with regression tests. Use when invoked as /bugkiller or when asked to investigate and fix a bug through a ranked hypothesis document.'
+description: 'Investigate a developer-reported bug from a bug description, identify and rank likely root causes with evidence quality, write BUG_INVESTIGATION.md with ranked problems, detailed solutions, and Implemented?/Worked? status columns, then iteratively apply one selected fix at a time until the user confirms one worked or every proposed fix has failed. Use when invoked as /bugkiller or when asked to investigate and fix a bug through a ranked hypothesis document.'
 ---
 
 # 🐛 Bugkiller
 
-> **Purpose**: Read a bug description, investigate the system for likely causes, write `BUG_INVESTIGATION.md` with ranked hypotheses, evidence quality, and detailed solutions, wait for the developer to choose one or more solutions, then implement the selected fix or fixes with an automated regression test.
+> **Purpose**: Read a bug description, investigate the system for likely causes, write `BUG_INVESTIGATION.md` with ranked hypotheses, evidence quality, detailed solutions, and per-solution attempt status, then iteratively implement one developer-selected fix at a time until the developer confirms one worked or every proposed solution has been tried and failed.
 
 ## Usage
 
@@ -22,15 +22,21 @@ If the bug description is missing, stop and ask the developer to provide it. If 
 ## Required Outputs
 
 - `BUG_INVESTIGATION.md` at the repository root.
-- A ranked markdown table in `BUG_INVESTIGATION.md` with exactly these columns: `Description`, `Ranking`, `Quality`, and `Solution`.
-- One or more implemented fixes, only after the developer selects table entries.
-- An automated regression test that simulates the bug and should fail on the resolved base ref but pass on the fixed branch.
+- A ranked markdown table in `BUG_INVESTIGATION.md` with exactly these columns: `Description`, `Ranking`, `Quality`, `Solution`, `Implemented?`, and `Worked?`.
+- An interactive retry loop where the developer selects one eligible table row at a time.
+- Status updates in `BUG_INVESTIGATION.md`: `Implemented?` is marked `🟢` after a row has been applied, and `Worked?` is marked `🟢` only after the developer confirms it fixed the bug or `🔴` after the developer confirms it did not.
+- A successful implemented fix, only after the developer selects a table entry and confirms that it worked.
+- An automated regression test for the successful fix that simulates the bug and should fail on the resolved base ref but pass on the fixed branch.
 - A final summary for the developer explaining what happened, what changed, and how it was verified.
 
 ## Safety Boundaries
 
-- Keep investigation read-only except for writing `BUG_INVESTIGATION.md`; do not modify application code, tests, or configuration until the developer has selected one or more solutions.
+- Keep investigation read-only except for writing `BUG_INVESTIGATION.md`; do not modify application code, tests, or configuration until the developer has selected a solution.
 - Do not implement a fix before the developer selects a solution.
+- Implement one independent table row at a time. Do not batch independent fixes unless the developer explicitly asks for a custom combined attempt.
+- After each attempted fix, ask the developer whether it really fixed the bug before finalizing the attempt as successful.
+- If an attempted fix did not work, remove only the code, test, and configuration changes made during that attempt. Keep the `BUG_INVESTIGATION.md` status marks that record the failed attempt.
+- Never retry a row where `Implemented?` is `🟢` and `Worked?` is `🔴` unless the developer explicitly asks to revisit it.
 - Preserve unrelated user changes in the working tree.
 - Do not invent evidence. Separate confirmed facts from plausible inferences.
 - Never ask the developer to paste secrets into chat.
@@ -60,7 +66,7 @@ Use `BASE_REF` throughout investigation notes and regression verification.
 
 ## Step 3 — Investigate in Read-Only Mode
 
-Investigate enough of the system to produce credible ranked causes.
+Investigate deeply enough to produce credible ranked causes and realistic fix options.
 
 1. Find relevant entry points, files, tests, routes, commands, jobs, components, configuration, data models, and dependencies.
 2. Trace the bug path from input to failure point.
@@ -102,6 +108,8 @@ Before writing, check whether `BUG_INVESTIGATION.md` already exists at the repos
 - If it does not exist, create it.
 - If it exists and clearly belongs to this same investigation, update it.
 - If it exists and appears unrelated or you cannot tell, read it and ask the developer before replacing it.
+- If an existing same-investigation table uses the legacy four-column format, migrate it to the six-column format and leave status cells blank unless the current conversation already proves a status.
+- Preserve existing `Implemented?` and `Worked?` values when updating a same-investigation table unless the developer explicitly asks to reset them.
 
 Write `BUG_INVESTIGATION.md` with this structure:
 
@@ -114,47 +122,104 @@ Write `BUG_INVESTIGATION.md` with this structure:
 
 ## Ranked Causes and Solutions
 
-| Description | Ranking | Quality | Solution |
-|-------------|---------|---------|----------|
-| **1. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️⭐️⭐️ | confirmed | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
-| **2. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️ | inferred | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |
+| Description | Ranking | Quality | Solution | Implemented? | Worked? |
+|-------------|---------|---------|----------|--------------|---------|
+| **1. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️⭐️⭐️ | confirmed | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |  |  |
+| **2. [Problem description]**<br><br>[Key evidence and affected code path.] | ⭐️⭐️⭐️ | inferred | [Detailed solution, including expected files/modules to change and why this fixes the bug.] |  |  |
 ```
 
 Rules for the table:
 
-- Keep exactly four columns: `Description`, `Ranking`, `Quality`, and `Solution`.
+- Keep exactly six columns: `Description`, `Ranking`, `Quality`, `Solution`, `Implemented?`, and `Worked?`.
 - Order rows from highest ranking to lowest ranking.
 - Use only these `Quality` values: `confirmed`, `observed`, `inferred`, or `speculative`.
 - Number each row inside the `Description` cell so the developer can select solutions by number.
+- Leave `Implemented?` and `Worked?` blank for untried rows.
+- Use only these non-blank status values in `Implemented?` and `Worked?`: `🟢` and `🔴`.
+- For `Implemented?`, use blank for not attempted and `🟢` for attempted. Do not mark unattempted rows as `🔴`.
+- Mark `Implemented?` as `🟢` immediately after the row's fix has been applied in the code, even if the fix is later rolled back because it did not work.
+- Mark `Worked?` as `🟢` only after the developer confirms the applied fix solved the bug.
+- Mark `Worked?` as `🔴` if the developer says the applied fix did not solve the bug. Keep `Implemented?` as `🟢` for that row.
 - Escape pipe characters in cell content.
 - Keep solutions detailed enough to implement without re-investigating from scratch.
 
-After writing the file, summarize the top candidates and explicitly wait for the developer to select one or more row numbers or describe a custom combination. Do not modify code yet.
+After writing the file, summarize the top candidates and ask the developer to select one eligible row number or describe a custom direction. Use the harness's structured user-question tool when available, such as `AskUserQuestion` or an equivalent `question` tool; otherwise ask a concise normal question and wait. Do not modify code yet.
 
-## Step 6 — Wait for Developer Selection
+## Step 6 — Ask for the Next Fix Attempt
 
-The developer may select one solution, multiple solutions, ask for edits to the investigation, or provide a custom direction.
+The developer may select one row, ask for edits to the investigation, or provide a custom direction.
 
-- If they select one or more rows, implement only those selected fixes.
+- If any row has `Implemented?` = `🟢` and a blank `Worked?` value, treat it as a pending confirmation and go to Step 8 for that row before offering new choices.
+- Build the choice list from eligible rows in `BUG_INVESTIGATION.md`.
+- A row is eligible when both `Implemented?` and `Worked?` are blank.
+- Exclude rows where `Worked?` is `🟢`; a confirmed working fix ends the loop.
+- Exclude rows where `Implemented?` is `🟢` and `Worked?` is `🔴`; those attempts already failed.
+- Present each option with the row number plus a brief description of the suspected cause and the proposed implementation.
+- Ask the developer to pick exactly one row for the next attempt. If they select multiple independent rows, ask which one to try first.
+- If they select one row, implement only that selected fix.
 - If they ask for changes to the investigation, update `BUG_INVESTIGATION.md` and wait again.
-- If they provide a custom direction, restate it and follow it if it is compatible with the evidence and safety boundaries.
+- If they provide a custom direction, restate it and follow it only if it is compatible with the evidence and safety boundaries. If the custom direction is a new candidate fix, add or update a table row before implementing it.
 - If the selection is ambiguous, ask a concise clarifying question before editing code.
+- If no eligible rows remain and no row has `Worked?` = `🟢`, stop and report that every proposed fix was implemented and confirmed not to work. Ask whether the developer wants a deeper follow-up investigation with new hypotheses.
 
-## Step 7 — Implement the Selected Fixes
+## Step 7 — Implement the Selected Attempt
 
-Once the developer selects the solution or solutions:
+Once the developer selects the next solution:
 
-1. Re-read the selected table rows and relevant code.
+1. Re-read the selected table row and relevant code.
 2. Implement the smallest fix that addresses the selected root cause.
 3. Follow existing architecture, naming, validation, error handling, and test conventions.
 4. Avoid unrelated refactors.
-5. Add or update an automated regression test that reproduces the reported bug before the fix and passes after the fix.
+5. Add or update an automated regression test for the selected attempt when practical. A regression test is required for the final successful fix.
+6. Update `BUG_INVESTIGATION.md` so the selected row has `Implemented?` = `🟢` and `Worked?` remains blank.
 
-When multiple solutions are selected, apply them in dependency order and keep each change traceable to the selected row.
+Before editing application code, capture enough pre-attempt state to roll back only this attempt if it fails:
 
-## Step 8 — Verify the Regression Test
+- Check the current working tree status.
+- Note existing unrelated changes and do not overwrite them.
+- Track the files and hunks you change for this attempt.
+- Do not use destructive whole-tree rollback commands such as `git reset --hard` or broad checkout commands. If the attempt fails, manually remove or reverse only the hunks introduced by that attempt while preserving unrelated user changes and `BUG_INVESTIGATION.md` status updates.
 
-Run the focused regression test on the fixed branch and confirm it passes. Then verify that the same test fails against `BASE_REF`.
+When a selected row is applied, run the focused verification that is practical before asking the developer whether the bug is fixed. Include the local verification result in the question.
+
+## Step 8 — Ask Whether the Attempt Worked
+
+After applying the selected row and marking `Implemented?` as `🟢`, ask the developer whether the fix really solved the bug. Use the harness's structured user-question tool when available.
+
+Use this prompt shape:
+
+```text
+Bugfix #[row number] ("[brief solution description]") applied.
+
+Did it really fix the bug?
+```
+
+Choices:
+
+| Choice | Meaning |
+|--------|---------|
+| Yes | The bug is fixed by this attempt |
+| No | The bug still reproduces or the fix is not acceptable |
+
+If the developer answers `Yes`:
+
+1. Update `BUG_INVESTIGATION.md` so the selected row has `Worked?` = `🟢`.
+2. Keep the implementation and regression test changes.
+3. Continue to final regression verification.
+
+If the developer answers `No`:
+
+1. Update `BUG_INVESTIGATION.md` so the selected row has `Worked?` = `🔴` while keeping `Implemented?` = `🟢`.
+2. Remove only the code, test, and configuration changes introduced by this failed attempt.
+3. Preserve `BUG_INVESTIGATION.md` status updates and all unrelated working tree changes.
+4. Confirm the failed attempt's code changes have been removed.
+5. Return to Step 6 and ask the developer to choose another eligible row.
+
+Loop through Steps 6, 7, and 8 until one row has `Worked?` = `🟢` or until all rows have been attempted and confirmed not to work.
+
+## Step 9 — Verify the Successful Regression Test
+
+After the developer confirms that an attempt worked, run the focused regression test on the fixed branch and confirm it passes. Then verify that the same test fails against `BASE_REF`.
 
 Preferred base-ref verification process:
 
@@ -167,11 +232,12 @@ Preferred base-ref verification process:
 
 If base-ref verification is impractical, document exactly why and report the strongest available alternative evidence, such as a focused reproduction command, logs, failing local output before the fix, or a code-path proof.
 
-## Step 9 — Final Summary
+## Step 10 — Final Summary
 
 After implementation and verification, report:
 
-- Which `BUG_INVESTIGATION.md` row or rows were selected.
+- Which `BUG_INVESTIGATION.md` row worked.
+- Which rows were attempted and confirmed not to work, if any.
 - The confirmed root cause.
 - The files changed.
 - The regression test added or updated.

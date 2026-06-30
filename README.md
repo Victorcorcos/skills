@@ -49,7 +49,7 @@ This repository supports:
 | ✂️ | Breaker | `/breaker` | Split large PRs into smaller, independent SRP-based units created from the base ref using wisetree worktrees | 🟢 |
 | 📈 | Coverager | `/coverager` | Increase code coverage to 100% with meaningful BDD-structured tests from a SimpleCov report | 🟢 |
 | 🩹 | Fixer | `/fixer` | Resolve PR review comments interactively | 🟢 |
-| 🐛 | Bugkiller | `/bugkiller` | Investigate a bug, write ranked causes, evidence quality, and solutions to `BUG_INVESTIGATION.md`, then fix selected solutions with regression tests | 🟢 |
+| 🐛 | Bugkiller | `/bugkiller` | Investigate a bug, write ranked causes and tracked fix attempts to `BUG_INVESTIGATION.md`, then try selected solutions until one works | 🟢 |
 | 🔍 | Reviewer | `/reviewer` | Review code and tests, post inline PR comments for approved findings, then optionally submit a PR review summary | 🟢 |
 | 🔀 | Merger | `/merger` | Fetch and merge a remote branch into the current branch, resolving conflicts without breaking code | 🟢 |
 
@@ -190,7 +190,7 @@ Use the creator skill to generate a PR title and description
 - ✂️ **Breaker** — Analyzes a large PR and splits it into smaller, independent pull requests following the Single Responsibility Principle using `wisetree` worktrees — each child branch is created from the base ref, each PR is self-sufficient with its own implementation and tests in an isolated worktree directory, and the sum of all child PRs must exactly match the original diff.
 - 📈 **Coverager** — Analyzes a SimpleCov HTML coverage report, identifies uncovered lines, and adds meaningful BDD-structured tests to reach full coverage without artificial test padding.
 - 🩹 **Fixer** — Fetches review comments from a GitHub PR, filters actionable feedback, proposes up to three solutions per comment, and walks through an interactive resolution flow with apply/skip/custom options.
-- 🐛 **Bugkiller** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions and evidence quality, waits for the developer to choose fixes, then implements them with regression tests that should fail on the resolved base ref and pass on the fixed branch.
+- 🐛 **Bugkiller** — Reads a bug description, investigates likely root causes, writes `BUG_INVESTIGATION.md` with ranked solutions, evidence quality, and `Implemented?` / `Worked?` attempt tracking, then applies one selected fix at a time until the developer confirms one worked or all proposed fixes failed.
 - 🔍 **Reviewer** — Reviews branch code and related automated tests for Clean Code violations, security vulnerabilities, performance issues, test quality weaknesses, and convention mismatches, then walks through each finding interactively — posting inline PR comments with code suggestions upon approval, and finally drafting a markdown PR review summary that can be submitted either as a comment-only review or a request-changes review.
 - 🔀 **Merger** — Fetches a remote and merges its branch into the current branch (e.g. `upstream/main`), then resolves any conflicts by preserving the intent of both sides — without using `--ours`/`--theirs` shortcuts and without introducing bugs.
 
