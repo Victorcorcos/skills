@@ -28,6 +28,7 @@ If the bug description is missing, stop and ask the developer to provide it. If 
 - A successful implemented fix, only after the developer selects a table entry and confirms that it worked.
 - An automated regression test for the successful fix that simulates the bug and should fail on the resolved base ref but pass on the fixed branch.
 - A final summary for the developer explaining what happened, what changed, and how it was verified.
+- After every failed or blocked attempt, a new structured question that offers the next eligible rows instead of stopping at a status summary.
 
 ## Safety Boundaries
 
@@ -40,6 +41,15 @@ If the bug description is missing, stop and ask the developer to provide it. If 
 - Preserve unrelated user changes in the working tree.
 - Do not invent evidence. Separate confirmed facts from plausible inferences.
 - Never ask the developer to paste secrets into chat.
+
+## Loop Invariants
+
+- The bugkiller workflow is not complete after an attempted fix fails, after an implementation is rolled back, or after a selected attempt is blocked before implementation.
+- A turn that records a failed attempt must end by returning to Step 6 and asking the developer to choose the next eligible row, unless one row has `Worked?` = `🟢` or every row has `Implemented?` = `🟢` and `Worked?` = `🔴`.
+- A turn that records a blocked selected attempt must end by returning to Step 6 and asking the developer to choose another eligible row or retry the blocked row after the blocker is resolved.
+- Do not replace the Step 6 structured question with a normal final summary while unresolved eligible rows remain.
+- Treat a developer's custom direction as a row selection when it clearly maps to an existing table row. If it does not map to an existing row, add or update a row first, then continue with the selected-row flow.
+- A selected row counts as `Implemented?` = `🟢` only after its code, test, or configuration changes were actually applied. Investigation notes, command failures, unavailable tooling, or environmental blockers do not count as implementation.
 
 ## Step 1 — Capture the Bug
 
@@ -159,8 +169,10 @@ The developer may select one row, ask for edits to the investigation, or provide
 - If they select one row, implement only that selected fix.
 - If they ask for changes to the investigation, update `BUG_INVESTIGATION.md` and wait again.
 - If they provide a custom direction, restate it and follow it only if it is compatible with the evidence and safety boundaries. If the custom direction is a new candidate fix, add or update a table row before implementing it.
+- If the custom direction clearly matches an existing row, treat that row as selected even if the developer did not provide the row number.
 - If the selection is ambiguous, ask a concise clarifying question before editing code.
 - If no eligible rows remain and no row has `Worked?` = `🟢`, stop and report that every proposed fix was implemented and confirmed not to work. Ask whether the developer wants a deeper follow-up investigation with new hypotheses.
+- If there are unresolved eligible rows, do not stop after reporting a failed or blocked attempt. Ask the Step 6 question in the same assistant turn.
 
 ## Step 7 — Implement the Selected Attempt
 
@@ -181,6 +193,14 @@ Before editing application code, capture enough pre-attempt state to roll back o
 - Do not use destructive whole-tree rollback commands such as `git reset --hard` or broad checkout commands. If the attempt fails, manually remove or reverse only the hunks introduced by that attempt while preserving unrelated user changes and `BUG_INVESTIGATION.md` status updates.
 
 When a selected row is applied, run the focused verification that is practical before asking the developer whether the bug is fixed. Include the local verification result in the question.
+
+If a selected row cannot be applied because a required command, tool, credential, dependency, device, or environment is unavailable:
+
+1. Do not mark `Implemented?` or `Worked?` for that row.
+2. Remove any partial code, test, or configuration changes made for that blocked attempt while preserving unrelated user changes.
+3. Add an `Attempt Notes` section to `BUG_INVESTIGATION.md`, or update the existing one, explaining the selected row, the exact blocker, and the commands or checks that proved it.
+4. Keep the row eligible unless the developer explicitly removes it or confirms the blocker cannot be resolved.
+5. Return immediately to Step 6 and ask the developer to choose another eligible row or retry the blocked row after resolving the blocker.
 
 ## Step 8 — Ask Whether the Attempt Worked
 
@@ -214,6 +234,8 @@ If the developer answers `No`:
 3. Preserve `BUG_INVESTIGATION.md` status updates and all unrelated working tree changes.
 4. Confirm the failed attempt's code changes have been removed.
 5. Return to Step 6 and ask the developer to choose another eligible row.
+
+After a `No` response, do not end the interaction with only a rollback summary. The same assistant turn must either ask the Step 6 next-row question or state that no eligible rows remain.
 
 Loop through Steps 6, 7, and 8 until one row has `Worked?` = `🟢` or until all rows have been attempted and confirmed not to work.
 

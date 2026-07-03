@@ -1,6 +1,6 @@
 interface:
   display_name: "🐛 Bugkiller"
   short_description: "Kill bugs with ranked evidence, tracked attempts, and tests."
-  default_prompt: "Use $bugkiller to investigate this bug, write BUG_INVESTIGATION.md with ranked causes, solutions, and Implemented?/Worked? attempt tracking, then let me choose one fix attempt at a time:"
+  default_prompt: "Use $bugkiller to investigate this bug, write BUG_INVESTIGATION.md with ranked causes, solutions, and Implemented?/Worked? attempt tracking, then let me choose one fix attempt at a time and keep looping through eligible rows until I confirm one worked or every attempted row failed:"
 policy:
   allow_implicit_invocation: false
